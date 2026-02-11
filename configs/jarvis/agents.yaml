@@ -1,0 +1,33 @@
+# ABOUTME: Jarvis agent configuration
+# ABOUTME: Defines 3 agents: welcome, joke, and weather agents
+
+agents:
+  welcome_agent:
+    prompt: "00-welcome"
+    batch_enabled: false
+    is_default: true
+    tools:
+      - "handoff"
+      - "get_agent_list"
+
+  joke_agent:
+    prompt: "01-joke"
+    output_schema: "joke-output.json"
+    batch_enabled: true
+    approach: "direct"
+    tools:
+      - "tell_joke"
+      - "get_joke_categories"
+      - "handoff"
+      - "get_agent_list"
+
+  weather_agent:
+    prompt: "02-weather"
+    output_schema: "weather-output.json"
+    batch_enabled: false
+    approach: "template"
+    tools:
+      - "get_weather"
+      - "get_forecast"
+      - "handoff"
+      - "get_agent_list"

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jarvis/weather-output.json",
+  "title": "Weather Output",
+  "type": "object",
+  "required": ["location", "temperature", "conditions"],
+  "properties": {
+    "location": {
+      "type": "string",
+      "description": "The location for which weather is provided"
+    },
+    "temperature": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {
+          "type": "number",
+          "description": "Temperature value"
+        },
+        "unit": {
+          "enum": ["celsius", "fahrenheit"],
+          "description": "Temperature unit"
+        }
+      }
+    },
+    "conditions": {
+      "type": "string",
+      "description": "Weather conditions (e.g., sunny, rainy, cloudy)"
+    },
+    "forecast": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Multi-day weather forecast"
+    }
+  }
+}
