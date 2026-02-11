@@ -3,11 +3,11 @@
 
 import logging
 
+from autobots_devtools_shared_lib.common.observability.tracing import init_tracing
 from autobots_devtools_shared_lib.dynagent.agents.batch import (
     BatchResult,
     batch_invoker,
 )
-from autobots_devtools_shared_lib.dynagent.observability.tracing import init_tracing
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
@@ -93,7 +93,7 @@ def jarvis_batch(agent_name: str, records: list[str]) -> BatchResult:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    from autobots_agents_jarvis.agents.jarvis_tools import register_jarvis_tools
+    from autobots_agents_jarvis.tools.jarvis_tools import register_jarvis_tools
 
     register_jarvis_tools()
 

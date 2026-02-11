@@ -94,7 +94,9 @@ def get_forecast(runtime: ToolRuntime[None, Dynagent], location: str, days: int 
     if "error" in forecast_data:
         return forecast_data["error"]
 
-    forecast_items = "\n  ".join(f"Day {i+1}: {item}" for i, item in enumerate(forecast_data["forecast"]))
+    forecast_items = "\n  ".join(
+        f"Day {i + 1}: {item}" for i, item in enumerate(forecast_data["forecast"])
+    )
     return f"Weather forecast for {forecast_data['location']}:\n  {forecast_items}"
 
 

@@ -40,10 +40,28 @@ WEATHER_DATA: dict[str, dict[str, Any]] = {
 
 # Forecast templates for different conditions
 FORECAST_TEMPLATES: dict[str, list[str]] = {
-    "Foggy": ["Foggy morning clearing to partly cloudy", "Continued fog with light winds", "Fog dissipating by midday"],
-    "Partly Cloudy": ["Mostly sunny", "Increasing clouds", "Cloudy with chance of rain"],
-    "Rainy": ["Light rain continuing", "Heavy rain expected", "Rain tapering off", "Scattered showers"],
-    "Clear": ["Clear skies continuing", "Partly cloudy", "Mostly sunny", "Clear and pleasant"],
+    "Foggy": [
+        "Foggy morning clearing to partly cloudy",
+        "Continued fog with light winds",
+        "Fog dissipating by midday",
+    ],
+    "Partly Cloudy": [
+        "Mostly sunny",
+        "Increasing clouds",
+        "Cloudy with chance of rain",
+    ],
+    "Rainy": [
+        "Light rain continuing",
+        "Heavy rain expected",
+        "Rain tapering off",
+        "Scattered showers",
+    ],
+    "Clear": [
+        "Clear skies continuing",
+        "Partly cloudy",
+        "Mostly sunny",
+        "Clear and pleasant",
+    ],
     "Sunny": ["Sunny and warm", "Hot and sunny", "Clear skies", "Bright sunshine"],
 }
 
@@ -60,7 +78,9 @@ def get_weather(location: str) -> dict[str, Any]:
     location_key = location.lower()
 
     if location_key not in WEATHER_DATA:
-        return {"error": f"Weather data not available for '{location}'. Try: San Francisco, New York, London, Tokyo, Seattle, or Miami."}
+        return {
+            "error": f"Weather data not available for '{location}'. Try: San Francisco, New York, London, Tokyo, Seattle, or Miami."
+        }
 
     return WEATHER_DATA[location_key].copy()
 
@@ -78,7 +98,9 @@ def get_forecast(location: str, days: int = 3) -> dict[str, Any]:
     location_key = location.lower()
 
     if location_key not in WEATHER_DATA:
-        return {"error": f"Weather data not available for '{location}'. Try: San Francisco, New York, London, Tokyo, Seattle, or Miami."}
+        return {
+            "error": f"Weather data not available for '{location}'. Try: San Francisco, New York, London, Tokyo, Seattle, or Miami."
+        }
 
     # Limit days to reasonable range
     days = min(max(days, 1), 7)
@@ -88,11 +110,11 @@ def get_forecast(location: str, days: int = 3) -> dict[str, Any]:
     conditions = current["conditions"]
     forecast_options = FORECAST_TEMPLATES.get(conditions, ["Conditions vary"])
 
-    # Generate forecast days
-    forecast_list = []
-    for i in range(days):
-        # Rotate through forecast options with some randomness
-        forecast_list.append(random.choice(forecast_options))
+    # Generate forecast days - using list comprehension for performance
+    forecast_list = [
+        random.choice(forecast_options)  # noqa: S311
+        for _ in range(days)
+    ]
 
     return {
         "location": current["location"],

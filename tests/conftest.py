@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from autobots_agents_jarvis.config.settings import Settings
+from autobots_agents_jarvis.configs.settings import Settings
 
 _JARVIS_CONFIG_CANDIDATES = [
     Path("configs/jarvis"),
@@ -97,7 +97,7 @@ def jarvis_registered():
         _reset_usecase_tools,
     )
 
-    from autobots_agents_jarvis.agents.jarvis_tools import register_jarvis_tools
+    from autobots_agents_jarvis.tools.jarvis_tools import register_jarvis_tools
 
     _reset_usecase_tools()
     AgentMeta.reset()
@@ -134,4 +134,5 @@ def clean_env() -> Generator[None, None, None]:
         if value is not None:
             os.environ[var] = value
         else:
+            os.environ.pop(var, None)
             os.environ.pop(var, None)

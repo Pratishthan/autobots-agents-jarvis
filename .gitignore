@@ -23,9 +23,13 @@ htmlcov/
 .vscode/
 *.swp
 *.swo
+.DS_Store
 
-# Chainlit
+# Chainlit - ignore runtime files, but keep config
+.chainlit/.files/
 .chainlit/.cache/
+.chainlit/*.db
+.chainlit/chat_files/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -234,3 +238,4 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+logs
