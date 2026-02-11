@@ -15,7 +15,7 @@ from autobots_devtools_shared_lib.dynagent.ui.ui_utils import stream_agent_event
 from dotenv import load_dotenv
 from langfuse import propagate_attributes
 
-from autobots_agents_jarvis.agents.jarvis_tools import register_jarvis_tools
+from autobots_agents_jarvis.tools.jarvis_tools import register_jarvis_tools
 from autobots_agents_jarvis.utils.formatting import format_structured_output
 
 if TYPE_CHECKING:

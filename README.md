@@ -80,7 +80,7 @@ Jarvis is a lightweight multi-agent system with three specialized agents:
    ./sbin/run_jarvis.sh
 
    # Or directly
-   chainlit run src/autobots_agents_jarvis/usecase_ui.py --port 1337
+   chainlit run src/autobots_agents_jarvis/jarvis_ui.py --port 1337
    ```
 
 5. **Open in browser**
@@ -236,7 +236,7 @@ autobots-agent-jarvis/
 │   │   └── jarvis_batch.py          # Batch processing
 │   ├── utils/
 │   │   └── formatting.py            # Output formatters
-│   └── usecase_ui.py                # Chainlit app entry point
+│   └── jarvis_ui.py                # Chainlit app entry point
 ├── configs/jarvis/
 │   ├── agents.yaml                  # Agent definitions
 │   ├── prompts/                     # Agent prompt templates

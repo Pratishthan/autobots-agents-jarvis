@@ -97,9 +97,11 @@ def get_joke(category: str) -> dict[str, Any]:
         A dictionary containing joke_text, category, and rating
     """
     if category not in JOKES:
-        return {"error": f"Invalid category '{category}'. Use get_joke_categories to see available categories."}
+        return {
+            "error": f"Invalid category '{category}'. Use get_joke_categories to see available categories."
+        }
 
-    return random.choice(JOKES[category])
+    return random.choice(JOKES[category])  # noqa: S311 - random is fine for joke selection
 
 
 def list_categories() -> list[str]:

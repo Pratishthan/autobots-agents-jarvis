@@ -24,8 +24,11 @@ htmlcov/
 *.swp
 *.swo
 
-# Chainlit
+# Chainlit - ignore runtime files, but keep config
+.chainlit/.files/
 .chainlit/.cache/
+.chainlit/*.db
+.chainlit/chat_files/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
