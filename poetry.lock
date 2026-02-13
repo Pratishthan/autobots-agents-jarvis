@@ -5646,4 +5646,4 @@ dev = ["pre-commit", "pyright", "pytest", "pytest-asyncio", "pytest-cov", "ruff"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0.0"
-content-hash = "2d6befd60f7c1091f0b4b884f0481f853c5202ebeea51d33604ce55948ca9e5a"
+content-hash = "cbdde6bd31eb866002c8b57d26e106cf4a7363ea5b1ed5c1a32fac4da96e9700"
