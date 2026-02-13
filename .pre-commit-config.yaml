@@ -30,7 +30,7 @@ repos:
     hooks:
       - id: pyright
         name: pyright
-        entry: bash -c 'cd "$(git rev-parse --show-toplevel)/.." && .venv/bin/pyright autobots-agent-jarvis/src'
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)/.." && .venv/bin/pyright autobots-agents-jarvis/src'
         language: system
         types: [python]
         files: ^src/

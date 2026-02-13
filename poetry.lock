@@ -342,7 +342,7 @@ files = [
 
 [[package]]
 name = "autobots-devtools-shared-lib"
-version = "0.1.4a2"
+version = "0.1.4"
 description = "Shared library functions to be used for all autobots projects"
 optional = false
 python-versions = ">=3.12,<4.0.0"
@@ -361,6 +361,8 @@ pyyaml = ">=6.0.3"
 
 [package.extras]
 dev = ["fastapi (>=0.115.0)", "pre-commit (>=4.5.1)", "pyright (>=1.1.408)", "pytest (>=9.0.2)", "pytest-asyncio (>=1.3.0)", "pytest-cov (>=7.0.0)", "ruff (>=0.14.14)", "uvicorn[standard] (>=0.32.0)"]
+file-server = ["fastapi (>=0.115.0)", "uvicorn[standard] (>=0.32.0)"]
+file-server-otel = ["opentelemetry-api (>=1.30.0,<2.0.0)", "opentelemetry-exporter-otlp-proto-http (>=1.30.0,<2.0.0)", "opentelemetry-instrumentation-fastapi (>=0.49b0)", "opentelemetry-sdk (>=1.30.0,<2.0.0)"]
 
 [package.source]
 type = "directory"
@@ -5646,4 +5648,4 @@ dev = ["pre-commit", "pyright", "pytest", "pytest-asyncio", "pytest-cov", "ruff"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0.0"
-content-hash = "c5d82faf301fff6ca41845216692aa1546e40cbc61ba1ef04f596a4ee85cb31a"
+content-hash = "4a8e72b8640c2a4c2b1ec819ee6cd72451359f751fa6255b4b249052facfd5a7"

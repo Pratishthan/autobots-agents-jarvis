@@ -5,15 +5,11 @@ from typing import TYPE_CHECKING, Any
 
 import chainlit as cl
 from autobots_devtools_shared_lib.common.observability.logging_utils import get_logger
-from autobots_devtools_shared_lib.common.observability.tracing import (
-    flush_tracing,
-    get_langfuse_handler,
-    init_tracing,
-)
+from autobots_devtools_shared_lib.common.observability.trace_metadata import TraceMetadata
+from autobots_devtools_shared_lib.common.observability.tracing import flush_tracing, init_tracing
 from autobots_devtools_shared_lib.dynagent.agents.base_agent import create_base_agent
 from autobots_devtools_shared_lib.dynagent.ui.ui_utils import stream_agent_events
 from dotenv import load_dotenv
-from langfuse import propagate_attributes
 
 from autobots_agents_jarvis.tools.jarvis_tools import register_jarvis_tools
 from autobots_agents_jarvis.utils.formatting import format_structured_output
@@ -65,8 +61,21 @@ async def start():
     """Initialize the chat session with the welcome agent."""
     # Create agent instance once and store it in session
     init_tracing()
-    agent = create_base_agent(agent_name=APP_NAME)
-    cl.user_session.set("agent", agent)
+    base_agent = create_base_agent()
+    cl.user_session.set("base_agent", base_agent)
+
+    # Prepare trace metadata for Langfuse observability (session-level)
+    user = cl.user_session.get("user")
+    if user:
+        user_name = user.identifier
+        trace_metadata = TraceMetadata.create(
+            session_id=cl.context.session.thread_id,
+            app_name=APP_NAME,
+            user_id=user_name[:200],
+            tags=[APP_NAME],
+        )
+        cl.user_session.set("trace_metadata", trace_metadata)
+
     await cl.Message(content="Hello! I'm Jarvis. How can I help you today?").send()
 
 
@@ -81,16 +90,11 @@ async def on_message(message: cl.Message):
         "run_name": APP_NAME,  # Set trace name for Langfuse
     }
 
-    # Add Langfuse handler if available
-    langfuse_handler = get_langfuse_handler()
-    if langfuse_handler:
-        config["callbacks"] = [langfuse_handler]
-
     # Reuse the same agent instance from session
-    agent = cl.user_session.get("agent")
+    base_agent = cl.user_session.get("base_agent")
     user = cl.user_session.get("user")
 
-    if not agent or not user:
+    if not base_agent or not user:
         await cl.Message(content="Error: Session initialization failed. Please refresh.").send()
         return
 
@@ -103,21 +107,18 @@ async def on_message(message: cl.Message):
         "session_id": cl.context.session.thread_id,
     }
 
-    try:
-        # Use propagate_attributes to tag user and session for Langfuse tracking
-        with propagate_attributes(
-            user_id=user_name[:200],  # Ensure ≤200 chars as per Langfuse requirements
-            session_id=cl.context.session.thread_id[:200],  # Use thread_id as session
-            tags=[APP_NAME],  # Tag with app name for filtering in Langfuse
-        ):
-            await stream_agent_events(
-                agent,
-                input_state,
-                config,
-                on_structured_output=format_structured_output,
-            )
-    finally:
-        flush_tracing()
+    # Retrieve trace metadata from session
+    trace_metadata = cl.user_session.get("trace_metadata")
+
+    result = await stream_agent_events(
+        agent=base_agent,
+        input_state=input_state,
+        config=config,
+        on_structured_output=format_structured_output,
+        enable_tracing=True,
+        trace_metadata=trace_metadata,
+    )
+    logger.debug(f"Agent execution completed with result: {result}")
 
 
 @cl.on_stop

@@ -3,11 +3,9 @@
 
 import logging
 
+from autobots_devtools_shared_lib.common.observability.trace_metadata import TraceMetadata
 from autobots_devtools_shared_lib.common.observability.tracing import init_tracing
-from autobots_devtools_shared_lib.dynagent.agents.batch import (
-    BatchResult,
-    batch_invoker,
-)
+from autobots_devtools_shared_lib.dynagent.agents.batch import BatchResult, batch_invoker
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
@@ -64,18 +62,14 @@ def jarvis_batch(agent_name: str, records: list[str]) -> BatchResult:
         agent_name,
         len(records),
     )
+    trace_metadata = TraceMetadata.create(
+        app_name=f"{APP_NAME}-batch_invoker",
+        user_id="unknown_user",
+        tags=[APP_NAME],
+    )
 
     # Delegate to batch_invoker with Jarvis metadata
-    result = batch_invoker(
-        agent_name,
-        records,
-        enable_tracing=True,
-        trace_metadata={
-            "app_name": APP_NAME,  # Preserves span name: "jarvis_batch-{agent_name}-batch"
-            "user_id": agent_name,
-            "tags": [APP_NAME],
-        },
-    )
+    result = batch_invoker(agent_name, records, enable_tracing=True, trace_metadata=trace_metadata)
 
     # Jarvis exit logging
     logger.info(
