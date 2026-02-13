@@ -5,7 +5,7 @@ import logging
 
 from autobots_devtools_shared_lib.common.observability.trace_metadata import TraceMetadata
 from autobots_devtools_shared_lib.common.observability.tracing import init_tracing
-from autobots_devtools_shared_lib.dynagent.agents.batch import BatchResult, batch_invoker
+from autobots_devtools_shared_lib.dynagent import BatchResult, batch_invoker
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
@@ -17,9 +17,7 @@ APP_NAME = "jarvis_batch"
 
 def _get_jarvis_batch_agents() -> list[str]:
     """Load batch-enabled agents from agents.yaml."""
-    from autobots_devtools_shared_lib.dynagent.agents.agent_config_utils import (
-        get_batch_enabled_agents,
-    )
+    from autobots_devtools_shared_lib.dynagent import get_batch_enabled_agents
 
     return get_batch_enabled_agents()
 

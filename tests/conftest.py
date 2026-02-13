@@ -92,7 +92,7 @@ def oauth_settings() -> Settings:
 @pytest.fixture
 def jarvis_registered():
     """Register Jarvis tools; reset after test."""
-    from autobots_devtools_shared_lib.dynagent.agents.agent_meta import AgentMeta
+    from autobots_devtools_shared_lib.dynagent import AgentMeta
     from autobots_devtools_shared_lib.dynagent.tools.tool_registry import (
         _reset_usecase_tools,
     )

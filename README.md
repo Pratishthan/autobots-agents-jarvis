@@ -267,7 +267,7 @@ autobots-agent-jarvis/
 
 ```python
 from langchain.tools import ToolRuntime, tool
-from autobots_devtools_shared_lib.dynagent.models.state import Dynagent
+from autobots_devtools_shared_lib.dynagent import Dynagent
 
 @tool
 def my_new_tool(runtime: ToolRuntime[None, Dynagent], param: str) -> str:

@@ -4,7 +4,7 @@
 from typing import Any
 
 # Re-exported from the shared dynagent UI layer so existing imports keep working.
-from autobots_devtools_shared_lib.dynagent.ui.ui_utils import (
+from autobots_devtools_shared_lib.dynagent.ui import (
     format_dict_item,
     structured_to_markdown,
 )

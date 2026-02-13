@@ -6,10 +6,7 @@ from typing import Any
 
 from autobots_devtools_shared_lib.common.observability.logging_utils import get_logger
 from autobots_devtools_shared_lib.common.observability.trace_metadata import TraceMetadata
-from autobots_devtools_shared_lib.dynagent.agents.invocation_utils import (
-    ainvoke_agent,
-    invoke_agent,
-)
+from autobots_devtools_shared_lib.dynagent import ainvoke_agent, invoke_agent
 from dotenv import load_dotenv
 
 from autobots_agents_jarvis.tools.jarvis_tools import register_jarvis_tools

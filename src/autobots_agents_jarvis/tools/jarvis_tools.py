@@ -3,7 +3,7 @@
 
 import logging
 
-from autobots_devtools_shared_lib.dynagent.models.state import Dynagent
+from autobots_devtools_shared_lib.dynagent import Dynagent
 from langchain.tools import ToolRuntime, tool
 
 from autobots_agents_jarvis.services.joke_service import get_joke, list_categories
@@ -105,9 +105,7 @@ def get_forecast(runtime: ToolRuntime[None, Dynagent], location: str, days: int 
 
 def register_jarvis_tools() -> None:
     """Register all 4 Jarvis tools into the dynagent usecase pool."""
-    from autobots_devtools_shared_lib.dynagent.tools.tool_registry import (
-        register_usecase_tools,
-    )
+    from autobots_devtools_shared_lib.dynagent import register_usecase_tools
 
     register_usecase_tools(
         [

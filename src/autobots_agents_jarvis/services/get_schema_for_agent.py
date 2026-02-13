@@ -1,7 +1,7 @@
 # ABOUT ME: Toy function to show how schema json can be retrieved for an agent.
 
 from autobots_devtools_shared_lib.common.observability.logging_utils import get_logger
-from autobots_devtools_shared_lib.dynagent.agents.agent_meta import AgentMeta
+from autobots_devtools_shared_lib.dynagent import AgentMeta
 from dotenv import load_dotenv
 
 logger = get_logger(__name__)
