@@ -1,6 +1,7 @@
 # ABOUTME: Jarvis-specific Chainlit entry point for the jarvis_chat use case.
 # ABOUTME: Wires tracing, OAuth, and the shared streaming helper.
 
+import os
 from typing import TYPE_CHECKING, Any
 
 import chainlit as cl
@@ -33,31 +34,53 @@ init_jarvis_settings()
 register_jarvis_tools()
 
 
-@cl.oauth_callback  # type: ignore[arg-type]
-def oauth_callback(
-    provider_id: str,
-    token: str,  # noqa: ARG001
-    raw_user_data: dict,
-    default_user: cl.User,
-) -> cl.User | None:
-    """Handle OAuth callback from GitHub.
+# Check if OAuth is configured
+OAUTH_ENABLED = bool(
+    os.getenv("OAUTH_GITHUB_CLIENT_ID")
+    and os.getenv("OAUTH_GITHUB_CLIENT_SECRET")
+    and os.getenv("CHAINLIT_AUTH_SECRET")
+)
 
-    Args:
-        provider_id: The OAuth provider ID (e.g., "github").
-        token: The OAuth access token.
-        raw_user_data: Raw user data from the provider.
-        default_user: Default user object created by Chainlit.
+# Only register OAuth callback if OAuth is enabled
+if OAUTH_ENABLED:
 
-    Returns:
-        The authenticated user or None if authentication fails.
-    """
-    if provider_id != "github":
-        logger.warning(f"Unsupported OAuth provider: {provider_id}")
-        return None
+    @cl.oauth_callback  # type: ignore[arg-type]
+    def oauth_callback(
+        provider_id: str,
+        token: str,  # noqa: ARG001
+        raw_user_data: dict,
+        default_user: cl.User,
+    ) -> cl.User | None:
+        """Handle OAuth callback from GitHub.
 
-    username = raw_user_data.get("login", "unknown")
-    logger.info(f"User authenticated via GitHub: {username}")
-    return default_user
+        Args:
+            provider_id: The OAuth provider ID (e.g., "github").
+            token: The OAuth access token.
+            raw_user_data: Raw user data from the provider.
+            default_user: Default user object created by Chainlit.
+
+        Returns:
+            The authenticated user or None if authentication fails.
+        """
+        if provider_id != "github":
+            logger.warning(f"Unsupported OAuth provider: {provider_id}")
+            return None
+
+        username = raw_user_data.get("login", "unknown")
+        logger.info(f"User authenticated via GitHub: {username}")
+        return default_user
+else:
+    # No OAuth - anonymous access
+    logger.info("OAuth is not configured - anonymous access")
+    pass
+
+
+def _get_user_identifier() -> str:
+    """User ID for tracing and state; defaults to anonymous when OAuth is off."""
+    user = cl.user_session.get("user")
+    if user:
+        return user.identifier[:200]
+    return f"anonymous-{cl.context.session.thread_id}"[:200]
 
 
 @cl.on_chat_start
@@ -69,16 +92,16 @@ async def start():
     cl.user_session.set("base_agent", base_agent)
 
     # Prepare trace metadata for Langfuse observability (session-level)
-    user = cl.user_session.get("user")
-    if user:
-        user_name = user.identifier
-        trace_metadata = TraceMetadata.create(
-            session_id=cl.context.session.thread_id,
-            app_name=APP_NAME,
-            user_id=user_name[:200],
-            tags=[APP_NAME],
-        )
-        cl.user_session.set("trace_metadata", trace_metadata)
+    user_id = _get_user_identifier()
+    cl.user_session.set("user_id", user_id)
+
+    trace_metadata = TraceMetadata.create(
+        session_id=cl.context.session.thread_id,
+        app_name=APP_NAME,
+        user_id=user_id,
+        tags=[APP_NAME],
+    )
+    cl.user_session.set("trace_metadata", trace_metadata)
 
     await cl.Message(content="Hello! I'm Jarvis. How can I help you today?").send()
 
@@ -96,17 +119,15 @@ async def on_message(message: cl.Message):
 
     # Reuse the same agent instance from session
     base_agent = cl.user_session.get("base_agent")
-    user = cl.user_session.get("user")
-
-    if not base_agent or not user:
+    if not base_agent:
         await cl.Message(content="Error: Session initialization failed. Please refresh.").send()
         return
 
-    user_name = user.identifier
+    user_id = cl.user_session.get("user_id")
 
     input_state: dict[str, Any] = {
         "messages": [{"role": "user", "content": message.content}],
-        "user_name": user_name,
+        "user_id": user_id,
         "app_name": APP_NAME,
         "session_id": cl.context.session.thread_id,
     }

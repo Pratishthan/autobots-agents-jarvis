@@ -1,0 +1,8 @@
+# ABOUTME: Predefined chat script for UI sanity test.
+# messages: list of user messages and optional response assertions
+
+messages:
+  - user: "Tell me a joke"
+    assert_contains: []
+  - user: "What agents are available?"
+    assert_contains: ["joke", "weather"]
