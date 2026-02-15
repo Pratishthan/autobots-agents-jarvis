@@ -21,7 +21,10 @@ echo "Setting up virtual environment..."
 python3.12 -m venv .venv
 source .venv/bin/activate
 
-echo "Refreshing Poetry lock file..."
+echo "Scaffolding project structure... for $PROJECT_NAME and domain: $DOMAIN_NAME"
+.venv/bin/python sbin/scaffold.py "$PROJECT_NAME" --primary-domain "$DOMAIN_NAME"
+
+echo "Running Poetry lock to update $PROJECT_NAME"
 poetry lock
 
 echo "Installing dependencies..."
@@ -32,10 +35,5 @@ make install-hooks
 echo "Running quality checks..."
 make pre-commit
 
-echo "Scaffolding project structure... for $PROJECT_NAME and domain: $DOMAIN_NAME"
-.venv/bin/python sbin/scaffold.py "$PROJECT_NAME" --primary-domain "$DOMAIN_NAME"
-
-echo "Running Poetry lock to update $PROJECT_NAME"
-poetry lock
 
 echo "Setup complete for project: $PROJECT_NAME"

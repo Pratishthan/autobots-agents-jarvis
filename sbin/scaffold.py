@@ -325,7 +325,59 @@ def rename_paths(
                 print(f"Renamed: {rel_old} -> {rel_new}")
 
 
-_STANDALONE_PYRIGHT_ENTRY = "entry: bash -c '.venv/bin/pyright src'"
+def _convert_config_to_standalone(
+    file_path: Path, file_name: str, *, dry_run: bool = False
+) -> bool:
+    """Convert a config file from monorepo to standalone mode using markers.
+
+    Looks for lines with # MONOREPO and # STANDALONE markers and:
+    - Comments out lines with # MONOREPO
+    - Uncomments lines with # STANDALONE
+
+    Args:
+        file_path: Path to the config file
+        file_name: Display name for logging (e.g., ".pre-commit-config.yaml")
+        dry_run: If True, only report what would be done
+
+    Returns:
+        True if changes were made, False otherwise
+    """
+    if not file_path.exists():
+        return False
+
+    try:
+        content = file_path.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, PermissionError):
+        return False
+
+    new_lines = []
+    changes_made = False
+
+    for line in content.splitlines():
+        stripped = line.lstrip()
+        indent = line[: len(line) - len(stripped)]
+
+        # Monorepo line (active, needs to be commented out)
+        if "# MONOREPO" in line and not stripped.startswith("#"):
+            new_lines.append(indent + "# " + stripped)
+            changes_made = True
+        # Standalone line (commented, needs to be uncommented)
+        elif "# STANDALONE" in line and stripped.startswith("# "):
+            # Remove "# " from the beginning of stripped
+            new_lines.append(indent + stripped[2:])
+            changes_made = True
+        else:
+            new_lines.append(line)
+
+    if changes_made:
+        new_content = "\n".join(new_lines) + ("\n" if content.endswith("\n") else "")
+        if dry_run:
+            print(f"[DRY RUN] Would update {file_name}: monorepo -> standalone mode")
+        else:
+            file_path.write_text(new_content, encoding="utf-8")
+            print(f"Updated: {file_name} (monorepo -> standalone mode)")
+
+    return changes_made
 
 
 def apply_standalone_repo_config(project_dir: Path, *, dry_run: bool = False) -> None:
@@ -333,106 +385,15 @@ def apply_standalone_repo_config(project_dir: Path, *, dry_run: bool = False) ->
 
     Edits .pre-commit-config.yaml, Makefile, and pyproject.toml so the project
     uses a venv in the repo root and does not depend on a parent monorepo.
+
+    Uses # MONOREPO and # STANDALONE markers in config files for conversion.
     """
-    # 1. .pre-commit-config.yaml: set pyright hook to .venv/bin/pyright src
-    precommit = project_dir / ".pre-commit-config.yaml"
-    if precommit.exists():
-        try:
-            content = precommit.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, PermissionError):
-            pass
-        else:
-            new_lines = []
-            for line in content.splitlines():
-                if (
-                    "entry:" in line
-                    and "pyright" in line
-                    and ("cd " in line or "/src'" in line or '/src"' in line)
-                ):
-                    indent = line[: len(line) - len(line.lstrip())]
-                    new_lines.append(indent + _STANDALONE_PYRIGHT_ENTRY)
-                else:
-                    new_lines.append(line)
-            new_content = "\n".join(new_lines) + ("\n" if content.endswith("\n") else "")
-            if new_content != content:
-                if dry_run:
-                    print(
-                        "[DRY RUN] Would update .pre-commit-config.yaml: pyright entry -> standalone"
-                    )
-                else:
-                    precommit.write_text(new_content, encoding="utf-8")
-                    print("Updated: .pre-commit-config.yaml (pyright entry)")
-
-    # 2. Makefile: VENV = ../.venv -> VENV = .venv
-    makefile = project_dir / "Makefile"
-    if makefile.exists():
-        try:
-            content = makefile.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, PermissionError):
-            pass
-        else:
-            if "VENV = ../.venv" in content:
-                if dry_run:
-                    print("[DRY RUN] Would update Makefile: VENV -> .venv")
-                else:
-                    content = content.replace("VENV = ../.venv", "VENV = .venv")
-                    makefile.write_text(content, encoding="utf-8")
-                    print("Updated: Makefile (VENV)")
-
-    # 3. pyproject.toml: comment shared-lib dep; switch pyright to standalone block
-    pyproject = project_dir / "pyproject.toml"
-    if pyproject.exists():
-        try:
-            content = pyproject.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, PermissionError):
-            pass
-        else:
-            changed = False
-            # Comment out shared-lib path dependency if not already commented
-            shared_lib_line = 'autobots-devtools-shared-lib = {path = "../autobots-devtools-shared-lib", develop = true}'
-            if shared_lib_line in content and "# " + shared_lib_line not in content:
-                content = content.replace(shared_lib_line, "# " + shared_lib_line)
-                changed = True
-            # In [tool.pyright]: comment monorepo lines, uncomment standalone lines
-            in_pyright = False
-            result_lines = []
-            monorepo_uncommented = (
-                'venvPath = ".."',
-                'venv = ".venv"',
-                'extraPaths = ["src", "../autobots-devtools-shared-lib/src"]',
-            )
-            standalone_commented = (
-                '# venvPath = "."',
-                '# venv = ".venv"',
-                '# extraPaths = ["src"]',
-            )
-            for line in content.splitlines():
-                if line.strip() == "[tool.pyright]":
-                    in_pyright = True
-                    result_lines.append(line)
-                    continue
-                if in_pyright and line.strip().startswith("["):
-                    in_pyright = False
-                if in_pyright:
-                    stripped = line.strip()
-                    if stripped in monorepo_uncommented:
-                        indent = line[: len(line) - len(line.lstrip())]
-                        result_lines.append(indent + "# " + stripped)
-                        changed = True
-                        continue
-                    if stripped in standalone_commented:
-                        indent = line[: len(line) - len(line.lstrip())]
-                        result_lines.append(indent + stripped[2:].lstrip())  # drop "# "
-                        changed = True
-                        continue
-                result_lines.append(line)
-            if changed:
-                content = "\n".join(result_lines) + ("\n" if content.endswith("\n") else "")
-                if dry_run:
-                    print("[DRY RUN] Would update pyproject.toml: standalone venv and pyright")
-                else:
-                    pyproject.write_text(content, encoding="utf-8")
-                    print("Updated: pyproject.toml (standalone config)")
+    # Convert all config files from monorepo to standalone mode
+    _convert_config_to_standalone(
+        project_dir / ".pre-commit-config.yaml", ".pre-commit-config.yaml", dry_run=dry_run
+    )
+    _convert_config_to_standalone(project_dir / "Makefile", "Makefile", dry_run=dry_run)
+    _convert_config_to_standalone(project_dir / "pyproject.toml", "pyproject.toml", dry_run=dry_run)
 
 
 def scaffold(args: argparse.Namespace) -> None:
