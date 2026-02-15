@@ -42,7 +42,6 @@ packages = [
 [tool.poetry.dependencies]
 # Local path dependency (Poetry-specific)
 autobots-devtools-shared-lib = {path = "../autobots-devtools-shared-lib", develop = true}  # MONOREPO
-# autobots-devtools-shared-lib = {path = "../autobots-devtools-shared-lib", develop = true}  # STANDALONE
 
 
 [tool.ruff]
