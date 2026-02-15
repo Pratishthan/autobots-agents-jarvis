@@ -16,7 +16,7 @@ from autobots_devtools_shared_lib.dynagent.ui import stream_agent_events
 from dotenv import load_dotenv
 
 from autobots_agents_jarvis.common.utils.formatting import format_structured_output
-from autobots_agents_jarvis.configs.settings import init_jarvis_settings
+from autobots_agents_jarvis.configs.settings import init_app_settings
 from autobots_agents_jarvis.domains.sales.tools import register_sales_tools
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ logger = get_logger(__file__)
 APP_NAME = "sales_chat"
 
 # Register settings so shared-lib (dynagent) uses the same instance.
-init_jarvis_settings()
+init_app_settings()
 
 # Registration must precede AgentMeta.instance() (called inside create_base_agent).
 register_sales_tools()

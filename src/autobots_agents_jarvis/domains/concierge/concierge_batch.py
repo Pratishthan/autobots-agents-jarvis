@@ -1,5 +1,5 @@
-# ABOUTME: Jarvis-scoped batch entry point — validates against Jarvis's agent set.
-# ABOUTME: Delegates to dynagent's batch_invoker after the Jarvis gate passes.
+# ABOUTME: Concierge-scoped batch entry point — validates against Concierge's agent set.
+# ABOUTME: Delegates to dynagent's batch_invoker after the Concierge gate passes.
 
 from autobots_devtools_shared_lib.common.observability.logging_utils import (
     get_logger,
@@ -10,17 +10,17 @@ from autobots_devtools_shared_lib.common.observability.tracing import init_traci
 from autobots_devtools_shared_lib.dynagent import BatchResult, batch_invoker
 from dotenv import load_dotenv
 
-from autobots_agents_jarvis.configs.settings import init_jarvis_settings
+from autobots_agents_jarvis.domains.concierge.settings import init_concierge_settings
 
 logger = get_logger(__name__)
 load_dotenv()
-init_jarvis_settings()
+init_concierge_settings()
 
 # Application name for tracing and identification
-APP_NAME = "jarvis_batch"
+APP_NAME = "concierge_batch"
 
 
-def _get_jarvis_batch_agents() -> list[str]:
+def _get_concierge_batch_agents() -> list[str]:
     """Load batch-enabled agents from agents.yaml."""
     from autobots_devtools_shared_lib.dynagent import get_batch_enabled_agents
 
@@ -32,8 +32,8 @@ def _get_jarvis_batch_agents() -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def jarvis_batch(agent_name: str, records: list[str]) -> BatchResult:
-    """Run a batch through dynagent, gated to Jarvis batch-enabled agents only.
+def concierge_batch(agent_name: str, records: list[str]) -> BatchResult:
+    """Run a batch through dynagent, gated to Concierge batch-enabled agents only.
 
     Args:
         agent_name: Must be a batch-enabled agent from agents.yaml.
@@ -45,12 +45,12 @@ def jarvis_batch(agent_name: str, records: list[str]) -> BatchResult:
     Raises:
         ValueError: If agent_name is not batch-enabled or records is empty.
     """
-    jarvis_agents = _get_jarvis_batch_agents()
+    concierge_agents = _get_concierge_batch_agents()
 
-    if agent_name not in jarvis_agents:
+    if agent_name not in concierge_agents:
         raise ValueError(
             f"Agent '{agent_name}' is not enabled for batch processing. "
-            f"Valid batch-enabled agents: {', '.join(jarvis_agents)}"
+            f"Valid batch-enabled agents: {', '.join(concierge_agents)}"
         )
 
     if not records:
@@ -59,9 +59,9 @@ def jarvis_batch(agent_name: str, records: list[str]) -> BatchResult:
     # Initialize tracing (one-time singleton)
     init_tracing()
 
-    # Jarvis entry logging
+    # Concierge entry logging
     logger.info(
-        "jarvis_batch starting: agent=%s records=%d",
+        "concierge_batch starting: agent=%s records=%d",
         agent_name,
         len(records),
     )
@@ -72,12 +72,12 @@ def jarvis_batch(agent_name: str, records: list[str]) -> BatchResult:
     )
     set_conversation_id(agent_name)
 
-    # Delegate to batch_invoker with Jarvis metadata
+    # Delegate to batch_invoker with Concierge metadata
     result = batch_invoker(agent_name, records, enable_tracing=True, trace_metadata=trace_metadata)
 
-    # Jarvis exit logging
+    # Concierge exit logging
     logger.info(
-        "jarvis_batch complete: agent=%s successes=%d failures=%d",
+        "concierge_batch complete: agent=%s successes=%d failures=%d",
         agent_name,
         len(result.successes),
         len(result.failures),
@@ -91,9 +91,9 @@ def jarvis_batch(agent_name: str, records: list[str]) -> BatchResult:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    from autobots_agents_jarvis.domains.jarvis.tools import register_jarvis_tools
+    from autobots_agents_jarvis.domains.concierge.tools import register_concierge_tools
 
-    register_jarvis_tools()
+    register_concierge_tools()
 
     smoke_prompts = [
         "Tell me a programming joke",
@@ -108,7 +108,7 @@ if __name__ == "__main__":
         "Can you tell me a funny joke about databases?",
     ]
 
-    batch_result = jarvis_batch("joke_agent", smoke_prompts)
+    batch_result = concierge_batch("joke_agent", smoke_prompts)
     for record in batch_result.results:
         if record.success:
             print(f"Record {record.index} succeeded:\n{record.output}\n")

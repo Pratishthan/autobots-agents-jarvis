@@ -2,7 +2,7 @@
 
 import pytest
 
-from autobots_agents_jarvis.domains.jarvis.services import get_joke, list_categories
+from autobots_agents_jarvis.domains.concierge.services import get_joke, list_categories
 
 
 def test_list_categories():

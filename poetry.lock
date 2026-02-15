@@ -5776,4 +5776,4 @@ dev = ["playwright", "pre-commit", "pyright", "pytest", "pytest-asyncio", "pytes
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0.0"
-content-hash = "19386df9682c9859f7e99b39ddcc23d7968f5618d3086cdb2c46bfdc4bc37348"
+content-hash = "ad1afcd6e3505a6976c7f41ba3071dc51035e78a8dc59af259183891c8906601"

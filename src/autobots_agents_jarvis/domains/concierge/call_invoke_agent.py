@@ -13,13 +13,13 @@ from autobots_devtools_shared_lib.common.observability.tracing import init_traci
 from autobots_devtools_shared_lib.dynagent import ainvoke_agent, invoke_agent
 from dotenv import load_dotenv
 
-from autobots_agents_jarvis.domains.jarvis.tools import register_jarvis_tools
+from autobots_agents_jarvis.domains.concierge.tools import register_concierge_tools
 
 logger = get_logger(__name__)
 load_dotenv()
 
 
-register_jarvis_tools()
+register_concierge_tools()
 init_tracing()
 
 
@@ -72,7 +72,7 @@ def call_invoke_agent_sync(
     # Prepare trace metadata
     trace_metadata = TraceMetadata(
         session_id=session_id or TraceMetadata.create().session_id,
-        app_name="jarvis-invoke-demo",
+        app_name="concierge-invoke-demo",
         user_id="demo-user",
         tags=["demo", "sync", agent_name],
     )
@@ -153,7 +153,7 @@ async def call_invoke_agent_async(
     # Prepare trace metadata
     trace_metadata = TraceMetadata(
         session_id=session_id or TraceMetadata.create().session_id,
-        app_name="jarvis-invoke-demo",
+        app_name="concierge-invoke-demo",
         user_id="demo-user",
         tags=["demo", "async", agent_name],
     )

@@ -1,4 +1,4 @@
-# ABOUTME: Sanity tests for Dynagent canary - validates all Dynagent APIs via Jarvis.
+# ABOUTME: Sanity tests for Dynagent canary - validates all Dynagent APIs via Concierge.
 
 import os
 import subprocess
@@ -11,24 +11,24 @@ import pytest
 import yaml
 from langchain_core.messages import AIMessage
 
-from autobots_agents_jarvis.domains.jarvis.call_invoke_agent import (
+from autobots_agents_jarvis.domains.concierge.call_invoke_agent import (
     call_invoke_agent_async,
     call_invoke_agent_sync,
 )
-from autobots_agents_jarvis.domains.jarvis.get_schema_for_agent import get_schema_for_agent
-from autobots_agents_jarvis.domains.jarvis.jarvis_batch import jarvis_batch
+from autobots_agents_jarvis.domains.concierge.concierge_batch import concierge_batch
+from autobots_agents_jarvis.domains.concierge.get_schema_for_agent import get_schema_for_agent
 from tests.conftest import requires_google_api
 
 # Pytest marker for sanity tests
 pytestmark = [pytest.mark.sanity, requires_google_api]
 
-CHAINLIT_PORT = 1338
+CHAINLIT_PORT = 2338
 HEADLESS = True
 
 
 @pytest.fixture(autouse=True)
-def setup_jarvis(jarvis_registered):
-    """Ensure Jarvis tools are registered before each test."""
+def setup_concierge(concierge_registered):
+    """Ensure Concierge tools are registered before each test."""
     pass
 
 
@@ -37,7 +37,7 @@ def setup_jarvis(jarvis_registered):
 # ---------------------------------------------------------------------------
 
 
-def test_invoke_sync(jarvis_registered):
+def test_invoke_sync(concierge_registered):
     """Sanity: invoke_agent (sync) via call_invoke_agent_sync."""
     result = call_invoke_agent_sync(
         agent_name="joke_agent",
@@ -56,7 +56,7 @@ def test_invoke_sync(jarvis_registered):
 
 
 @pytest.mark.asyncio
-async def test_invoke_async(jarvis_registered):
+async def test_invoke_async(concierge_registered):
     """Sanity: ainvoke_agent via call_invoke_agent_async."""
     result = await call_invoke_agent_async(
         agent_name="joke_agent",
@@ -74,9 +74,9 @@ async def test_invoke_async(jarvis_registered):
 # ---------------------------------------------------------------------------
 
 
-def test_batch(jarvis_registered):
-    """Sanity: batch_invoker via jarvis_batch."""
-    result = jarvis_batch("joke_agent", ["Tell me a joke"])
+def test_batch(concierge_registered):
+    """Sanity: batch_invoker via concierge_batch."""
+    result = concierge_batch("joke_agent", ["Tell me a joke"])
     assert result.total == 1
     assert len(result.results) == 1
     assert result.results[0].success
@@ -89,7 +89,7 @@ def test_batch(jarvis_registered):
 # ---------------------------------------------------------------------------
 
 
-def test_get_schema(jarvis_registered):
+def test_get_schema(concierge_registered):
     """Sanity: get_schema_for_agent (AgentMeta.schema_map)."""
     schema = get_schema_for_agent("joke_agent")
     assert isinstance(schema, str)
@@ -102,14 +102,16 @@ def test_get_schema(jarvis_registered):
 # ---------------------------------------------------------------------------
 
 
-def _start_chainlit_no_auth(jarvis_dir: Path, port: int = 1337) -> subprocess.Popen:
+def _start_chainlit_no_auth(concierge_dir: Path, port: int = 2337) -> subprocess.Popen:
     """Start Chainlit with OAuth disabled for sanity test."""
     env = os.environ.copy()
     env["OAUTH_GITHUB_CLIENT_ID"] = ""
     env["OAUTH_GITHUB_CLIENT_SECRET"] = ""
     env["CHAINLIT_AUTH_SECRET"] = ""
-    env["DYNAGENT_CONFIG_ROOT_DIR"] = str(jarvis_dir / "agent_configs" / "jarvis")
-    app_path = jarvis_dir / "src" / "autobots_agents_jarvis" / "domains" / "jarvis" / "server.py"
+    env["DYNAGENT_CONFIG_ROOT_DIR"] = str(concierge_dir / "agent_configs" / "concierge")
+    app_path = (
+        concierge_dir / "src" / "autobots_agents_jarvis" / "domains" / "concierge" / "server.py"
+    )
     return subprocess.Popen(  # noqa: S603
         [
             sys.executable,
@@ -124,7 +126,7 @@ def _start_chainlit_no_auth(jarvis_dir: Path, port: int = 1337) -> subprocess.Po
             "--headless",
         ],
         env=env,
-        cwd=str(jarvis_dir),
+        cwd=str(concierge_dir),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
@@ -144,7 +146,7 @@ def _wait_for_chainlit(port: int, timeout: float = 30.0) -> bool:
     return False
 
 
-def test_ui_chat_script(jarvis_registered):
+def test_ui_chat_script(concierge_registered):
     """Sanity: stream_agent_events via Chainlit UI + Playwright + predefined script."""
     try:
         from playwright.sync_api import sync_playwright
@@ -153,13 +155,13 @@ def test_ui_chat_script(jarvis_registered):
             "playwright not installed; run: pip install playwright && playwright install chromium"
         )
 
-    jarvis_dir = Path(__file__).resolve().parent.parent.parent.parent.parent
+    concierge_dir = Path(__file__).resolve().parent.parent.parent.parent.parent
     script_path = Path(__file__).resolve().parent / "fixtures" / "chat_script.yaml"
     with script_path.open() as f:
         script = yaml.safe_load(f)
     messages = script.get("messages", [])
 
-    proc = _start_chainlit_no_auth(jarvis_dir, port=CHAINLIT_PORT)
+    proc = _start_chainlit_no_auth(concierge_dir, port=CHAINLIT_PORT)
     try:
         if not _wait_for_chainlit(CHAINLIT_PORT):
             pytest.fail("Chainlit did not become ready in time")

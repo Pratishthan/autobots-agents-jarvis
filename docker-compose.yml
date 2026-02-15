@@ -1,25 +1,32 @@
 # ABOUTME: Docker Compose configuration for local development.
-# ABOUTME: Includes jarvis-chat service with optional Langfuse V3 for observability.
+# ABOUTME: Includes three domain services (concierge, customer-support, sales) with optional Langfuse V3 for observability.
+
+# Common environment variables shared across all domain services
+x-common-env: &common-env
+  GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+  LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+  LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+  LANGFUSE_HOST: ${LANGFUSE_HOST:-http://langfuse-web:3000}
+  LANGFUSE_ENABLED: ${LANGFUSE_ENABLED:-true}
+  OAUTH_GITHUB_CLIENT_ID: ${OAUTH_GITHUB_CLIENT_ID:-}
+  OAUTH_GITHUB_CLIENT_SECRET: ${OAUTH_GITHUB_CLIENT_SECRET:-}
+  CHAINLIT_AUTH_SECRET: ${CHAINLIT_AUTH_SECRET:-}
+  DEBUG: ${DEBUG:-false}
+  LLM_MODEL: ${LLM_MODEL:-gemini-2.0-flash}
 
 services:
-  jarvis-chat:
+  concierge-chat:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        DOMAIN: concierge
     ports:
-      - "1337:1337"
+      - "2337:2337"
     environment:
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
-      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
-      - LANGFUSE_HOST=${LANGFUSE_HOST:-http://langfuse-web:3000}
-      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED:-true}
-      - OAUTH_GITHUB_CLIENT_ID=${OAUTH_GITHUB_CLIENT_ID:-}
-      - OAUTH_GITHUB_CLIENT_SECRET=${OAUTH_GITHUB_CLIENT_SECRET:-}
-      - CHAINLIT_AUTH_SECRET=${CHAINLIT_AUTH_SECRET:-}
-      - DEBUG=${DEBUG:-false}
-      - LLM_MODEL=${LLM_MODEL:-gemini-2.0-flash}
-      - DYNAGENT_CONFIG_ROOT_DIR=/app/agent_configs/jarvis
+      <<: *common-env
+      DYNAGENT_CONFIG_ROOT_DIR: /app/agent_configs/concierge
+      PORT: 2337
     volumes:
       - ./agent_configs:/app/agent_configs:ro
     restart: unless-stopped
@@ -27,7 +34,57 @@ services:
       langfuse-web:
         condition: service_started
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:1337/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:2337/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  customer-support-chat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DOMAIN: customer_support
+    ports:
+      - "1338:1338"
+    environment:
+      <<: *common-env
+      DYNAGENT_CONFIG_ROOT_DIR: /app/agent_configs/customer-support
+      PORT: 1338
+    volumes:
+      - ./agent_configs:/app/agent_configs:ro
+    restart: unless-stopped
+    depends_on:
+      langfuse-web:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:1338/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  sales-chat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DOMAIN: sales
+    ports:
+      - "1339:1339"
+    environment:
+      <<: *common-env
+      DYNAGENT_CONFIG_ROOT_DIR: /app/agent_configs/sales
+      PORT: 1339
+    volumes:
+      - ./agent_configs:/app/agent_configs:ro
+    restart: unless-stopped
+    depends_on:
+      langfuse-web:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:1339/health" ]
       interval: 30s
       timeout: 10s
       retries: 3

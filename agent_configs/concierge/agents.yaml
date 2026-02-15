@@ -1,4 +1,4 @@
-# ABOUTME: Jarvis agent configuration
+# ABOUTME: Concierge agent configuration
 # ABOUTME: Defines 3 agents: welcome, joke, and weather agents
 
 agents:

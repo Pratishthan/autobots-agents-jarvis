@@ -20,7 +20,7 @@ help:
 	@echo "  make build            - Build the package"
 	@echo "  make publish          - Publish package to PyPI"
 	@echo "  make update-deps      - Update dependencies"
-	@echo "  make chainlit-dev     - Run Jarvis Chainlit UI (port 1337)"
+	@echo "  make chainlit-dev     - Run Concierge Chainlit UI (port 2337)"
 	@echo "  make chainlit-customer-support - Run Customer Support UI (port 1338)"
 	@echo "  make chainlit-sales   - Run Sales UI (port 1339)"
 	@echo "  make chainlit-all     - Run all domains simultaneously"
@@ -63,8 +63,8 @@ DOCKER_REGISTRY = # Set this to your registry (e.g., docker.io/username)
 DOCKER_CONTAINER_NAME = autobots-agents-jarvis
 
 # Chainlit configuration
-CHAINLIT_PORT = 1337
-CHAINLIT_APP = src/autobots_agents_jarvis/domains/jarvis/server.py
+CHAINLIT_PORT = 2337
+CHAINLIT_APP = src/autobots_agents_jarvis/domains/concierge/server.py
 CHAINLIT_CUSTOMER_SUPPORT_PORT = 1338
 CHAINLIT_CUSTOMER_SUPPORT_APP = src/autobots_agents_jarvis/domains/customer_support/server.py
 CHAINLIT_SALES_PORT = 1339
@@ -160,9 +160,9 @@ export-requirements:
 	$(POETRY) export -f requirements.txt --output requirements.txt --without-hashes
 	$(POETRY) export -f requirements.txt --output requirements-dev.txt --with dev --without-hashes
 
-# Run Jarvis Chainlit UI in development mode
+# Run Concierge Chainlit UI in development mode
 chainlit-dev:
-	$(CHAINLIT) run $(CHAINLIT_APP) --port $(CHAINLIT_PORT) --host 127.0.0.1
+	DYNAGENT_CONFIG_ROOT_DIR=agent_configs/concierge $(CHAINLIT) run $(CHAINLIT_APP) --port $(CHAINLIT_PORT) --host 127.0.0.1
 
 # Run Customer Support Chainlit UI
 chainlit-customer-support:

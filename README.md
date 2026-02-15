@@ -1,12 +1,12 @@
-# Jarvis - Multi-Domain Multi-Agent AI Application
+# Autobots-Agents-Jarvis - Multi-Domain Multi-Agent AI Application
 
-Jarvis is a demonstration repository showcasing how to use the `autobots-devtools-shared-lib.dynagent` framework to build **multi-domain multi-agent AI applications**. It demonstrates production-ready architectural patterns for organizing multiple business domains with shared and domain-specific code.
+This is a demonstration repository showcasing how to use the `autobots-devtools-shared-lib.dynagent` framework to build **multi-domain multi-agent AI applications**. It demonstrates production-ready architectural patterns for organizing multiple business domains with shared and domain-specific code.
 
 ## Overview
 
-Jarvis demonstrates a **multi-domain architecture** with three independent business domains, each with specialized multi-agent systems:
+This repository demonstrates a **multi-domain architecture** with three independent business domains, each with specialized multi-agent systems:
 
-### 🤖 **Jarvis Domain** (General Assistant)
+### 🤖 **Concierge Domain** (General Assistant)
 - **Welcome Agent** - Routes to joke or weather agents
 - **Joke Agent** - Humor delivery with structured output (batch-enabled)
 - **Weather Agent** - Weather information with forecasts
@@ -37,20 +37,20 @@ Jarvis demonstrates a **multi-domain architecture** with three independent busin
 ### Multi-Domain Structure
 
 ```
-autobots-agents-jarvis/
+autobots-agents-concierge/
 ├── agent_configs/          # Agent configurations per domain
-│   ├── jarvis/            # Jarvis domain config
+│   ├── concierge/            # Concierge domain config
 │   ├── customer-support/  # Customer support domain config
 │   └── sales/             # Sales domain config
 │
-├── src/autobots_agents_jarvis/
+├── src/autobots_agents_concierge/
 │   ├── common/            # SHARED code across all domains
 │   │   ├── tools/         # Shared validation tools
 │   │   ├── services/      # Shared service patterns
 │   │   └── utils/         # Shared utilities
 │   │
 │   └── domains/           # DOMAIN-SPECIFIC code
-│       ├── jarvis/        # Jarvis implementation
+│       ├── concierge/        # Jarvis implementation
 │       ├── customer_support/  # Customer support implementation
 │       └── sales/         # Sales implementation
 ```
@@ -68,7 +68,7 @@ domains/{name}/
 ### Agent Mesh Architecture
 
 ```
-🤖 JARVIS (Port 2337)          🎧 CUSTOMER SUPPORT (Port 1338)     💼 SALES (Port 1339)
+🤖 CONCIERGE (Port 2337)          🎧 CUSTOMER SUPPORT (Port 1338)     💼 SALES (Port 1339)
 ┌─────────────────┐            ┌─────────────────┐                ┌─────────────────┐
 │ Welcome Agent   │            │  Coordinator    │                │  Coordinator    │
 │  (Default)      │            │   (Default)     │                │   (Default)     │
@@ -139,7 +139,7 @@ Press `Ctrl+C` to stop all domains.
 
 ```bash
 # Run Jarvis only (port 2337)
-make chainlit-dev
+make chainlit-dev     # Concierge UI at http://localhost:2337
 # OR: ./sbin/run_jarvis.sh
 
 # Run Customer Support only (port 1338)
@@ -153,7 +153,7 @@ make chainlit-sales
 
 ## Domain Descriptions
 
-### 🤖 Jarvis Domain (Port 2337)
+### 🤖 Concierge Domain (Port 2337)
 
 **Purpose**: General-purpose AI assistant for jokes and weather
 
@@ -213,7 +213,7 @@ def validate_phone(phone: str) -> str:
     # ...
 ```
 
-**Location**: `src/autobots_agents_jarvis/common/`
+**Location**: `src/autobots_agents_concierge/common/`
 - `common/tools/` - Shared validation tools
 - `common/services/` - Shared service patterns
 - `common/utils/` - Shared formatting utilities
@@ -231,7 +231,7 @@ def create_ticket(runtime: ToolRuntime[None, Dynagent], title: str, description:
 ```
 
 **Pattern**:
-- Each domain in `src/autobots_agents_jarvis/domains/{name}/`
+- Each domain in `src/autobots_agents_concierge/domains/{name}/`
 - Each has: `server.py`, `tools.py`, `services.py`
 - Domains opt-in to shared tools by calling `register_validation_tools()`
 
@@ -251,7 +251,7 @@ register_customer_support_tools()  # ← DOMAIN-SPECIFIC (tickets, KB)
 
 Three agents across domains support batch processing for parallel request handling:
 
-### Jarvis Domain - `joke_agent`
+### Concierge Domain - `joke_agent`
 
 ```python
 from autobots_agents_jarvis.domains.jarvis.jarvis_batch import jarvis_batch
@@ -342,7 +342,7 @@ make pre-commit
 
 ### Agent Configuration
 
-Agents are configured in `configs/jarvis/agents.yaml`:
+Agents are configured in `configs/concierge/agents.yaml`:
 
 ```yaml
 agents:
@@ -370,8 +370,8 @@ See `.env.example` for all available configuration options:
 ## Project Structure
 
 ```
-autobots-agents-jarvis/
-├── src/autobots_agents_jarvis/
+autobots-agents-concierge/
+├── src/autobots_agents_concierge/
 │   ├── agents/
 │   │   └── jarvis_tools.py          # Tool implementations
 │   ├── config/
@@ -383,7 +383,7 @@ autobots-agents-jarvis/
 │   ├── utils/
 │   │   └── formatting.py            # Output formatters
 │   └── jarvis_ui.py                # Chainlit app entry point
-├── configs/jarvis/
+├── configs/concierge/
 │   ├── agents.yaml                  # Agent definitions
 │   ├── prompts/                     # Agent prompt templates
 │   │   ├── 00-welcome.md
@@ -403,10 +403,10 @@ autobots-agents-jarvis/
 
 ### Adding a New Agent
 
-1. **Define the agent** in `configs/jarvis/agents.yaml`
-2. **Create prompt** in `configs/jarvis/prompts/`
-3. **Add output schema** (if needed) in `configs/jarvis/schemas/`
-4. **Implement tools** in `src/autobots_agents_jarvis/agents/jarvis_tools.py`
+1. **Define the agent** in `configs/concierge/agents.yaml`
+2. **Create prompt** in `configs/concierge/prompts/`
+3. **Add output schema** (if needed) in `configs/concierge/schemas/`
+4. **Implement tools** in `src/autobots_agents_concierge/agents/jarvis_tools.py`
 5. **Register tools** in `register_jarvis_tools()`
 6. **Add tests** in `tests/`
 
@@ -485,7 +485,7 @@ MIT
 
 ## Contributing
 
-Jarvis is a demonstration project showcasing multi-domain multi-agent architecture patterns. For contributions to the dynagent framework itself, please visit the `autobots-devtools-shared-lib` repository.
+This is a demonstration project showcasing multi-domain multi-agent architecture patterns. For contributions to the dynagent framework itself, please visit the `autobots-devtools-shared-lib` repository.
 
 ## Resources
 

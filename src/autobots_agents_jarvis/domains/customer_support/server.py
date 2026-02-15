@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 
 from autobots_agents_jarvis.common.tools.validation_tools import register_validation_tools
 from autobots_agents_jarvis.common.utils.formatting import format_structured_output
-from autobots_agents_jarvis.configs.settings import init_jarvis_settings
+from autobots_agents_jarvis.configs.settings import init_app_settings
 from autobots_agents_jarvis.domains.customer_support.tools import register_customer_support_tools
 
 if TYPE_CHECKING:
@@ -32,7 +32,7 @@ logger = get_logger(__file__)
 APP_NAME = "customer_support_chat"
 
 # Register settings so shared-lib (dynagent) uses the same instance.
-init_jarvis_settings()
+init_app_settings()
 
 # Registration must precede AgentMeta.instance() (called inside create_base_agent).
 register_validation_tools()  # Register shared validation tools from common/
