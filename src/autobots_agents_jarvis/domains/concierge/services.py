@@ -1,5 +1,5 @@
-# ABOUTME: Jarvis domain services — mock implementations for jokes and weather.
-# ABOUTME: Combines joke_service and weather_service for the Jarvis domain.
+# ABOUTME: Concierge domain services — mock implementations for jokes and weather.
+# ABOUTME: Combines joke_service and weather_service for the Concierge domain.
 
 import random
 from typing import Any

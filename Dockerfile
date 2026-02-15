@@ -30,10 +30,14 @@ RUN poetry install --no-root --only main && \
 # Stage 2: Runtime
 FROM python:3.12-slim-bookworm AS runtime
 
+# Build argument for domain selection
+ARG DOMAIN=concierge
+
 # Set environment variables for Python optimization
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/app/src
+    PYTHONPATH=/app/src \
+    APP_DOMAIN=${DOMAIN}
 
 # Install curl for health checks
 RUN apt-get update && \
@@ -68,12 +72,12 @@ USER app
 # Activate virtual environment by adding to PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Expose Chainlit port
-EXPOSE 1337
+# Expose Chainlit port (default concierge port: 2337)
+EXPOSE 2337
 
-# Health check
+# Health check (port will vary by domain, but defaults to 2337)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:1337/health || exit 1
+    CMD curl -f http://localhost:${PORT:-2337}/health || exit 1
 
-# Run the Chainlit application
-CMD ["bash", "sbin/run_jarvis.sh"]
+# Run the Chainlit application for the specified domain
+CMD ["sh", "-c", "bash sbin/run_${APP_DOMAIN}.sh"]

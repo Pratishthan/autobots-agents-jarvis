@@ -5,19 +5,20 @@ import os
 from typing import TYPE_CHECKING, Any
 
 import chainlit as cl
-from autobots_devtools_shared_lib.common.observability.logging_utils import (
+from autobots_devtools_shared_lib.common.observability import (
+    TraceMetadata,
+    flush_tracing,
     get_logger,
+    init_tracing,
     set_conversation_id,
 )
-from autobots_devtools_shared_lib.common.observability.trace_metadata import TraceMetadata
-from autobots_devtools_shared_lib.common.observability.tracing import flush_tracing, init_tracing
 from autobots_devtools_shared_lib.dynagent import create_base_agent
 from autobots_devtools_shared_lib.dynagent.ui import stream_agent_events
 from dotenv import load_dotenv
 
 from autobots_agents_jarvis.common.tools.validation_tools import register_validation_tools
 from autobots_agents_jarvis.common.utils.formatting import format_structured_output
-from autobots_agents_jarvis.configs.settings import init_jarvis_settings
+from autobots_agents_jarvis.configs.settings import init_app_settings
 from autobots_agents_jarvis.domains.customer_support.tools import register_customer_support_tools
 
 if TYPE_CHECKING:
@@ -32,7 +33,7 @@ logger = get_logger(__file__)
 APP_NAME = "customer_support_chat"
 
 # Register settings so shared-lib (dynagent) uses the same instance.
-init_jarvis_settings()
+init_app_settings()
 
 # Registration must precede AgentMeta.instance() (called inside create_base_agent).
 register_validation_tools()  # Register shared validation tools from common/

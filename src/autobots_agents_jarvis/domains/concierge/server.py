@@ -1,23 +1,24 @@
-# ABOUTME: Jarvis-specific Chainlit entry point for the jarvis_chat use case.
+# ABOUTME: Concierge-specific Chainlit entry point for the concierge_chat use case.
 # ABOUTME: Wires tracing, OAuth, and the shared streaming helper.
 
 import os
 from typing import TYPE_CHECKING, Any
 
 import chainlit as cl
-from autobots_devtools_shared_lib.common.observability.logging_utils import (
+from autobots_devtools_shared_lib.common.observability import (
+    TraceMetadata,
+    flush_tracing,
     get_logger,
+    init_tracing,
     set_conversation_id,
 )
-from autobots_devtools_shared_lib.common.observability.trace_metadata import TraceMetadata
-from autobots_devtools_shared_lib.common.observability.tracing import flush_tracing, init_tracing
 from autobots_devtools_shared_lib.dynagent import create_base_agent
 from autobots_devtools_shared_lib.dynagent.ui import stream_agent_events
 from dotenv import load_dotenv
 
 from autobots_agents_jarvis.common.utils.formatting import format_structured_output
-from autobots_agents_jarvis.configs.settings import init_jarvis_settings
-from autobots_agents_jarvis.domains.jarvis.tools import register_jarvis_tools
+from autobots_agents_jarvis.domains.concierge.settings import init_concierge_settings
+from autobots_agents_jarvis.domains.concierge.tools import register_concierge_tools
 
 if TYPE_CHECKING:
     from langchain_core.runnables import RunnableConfig
@@ -28,13 +29,13 @@ load_dotenv()
 logger = get_logger(__file__)
 
 # Application name for tracing and identification
-APP_NAME = "jarvis_chat"
+APP_NAME = "concierge_chat"
 
-# Register Jarvis settings so shared-lib (dynagent) uses the same instance.
-init_jarvis_settings()
+# Register Concierge settings so shared-lib (dynagent) uses the same instance.
+init_concierge_settings()
 
 # Registration must precede AgentMeta.instance() (called inside create_base_agent).
-register_jarvis_tools()
+register_concierge_tools()
 
 
 # Check if OAuth is configured
@@ -107,7 +108,7 @@ async def start():
     set_conversation_id(cl.context.session.thread_id)
     cl.user_session.set("trace_metadata", trace_metadata)
 
-    await cl.Message(content="Hello! I'm Jarvis. How can I help you today?").send()
+    await cl.Message(content="Hello! I'm Concierge. How can I help you today?").send()
 
 
 @cl.on_message

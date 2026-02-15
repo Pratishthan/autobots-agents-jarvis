@@ -1,16 +1,14 @@
-# ABOUTME: Jarvis use-case tools — the 4 tools that Jarvis registers.
+# ABOUTME: Concierge use-case tools — the tools that Concierge registers.
 # ABOUTME: Provides joke and weather functionality for demonstration purposes.
 
-from autobots_devtools_shared_lib.common.observability.logging_utils import (
-    get_logger,
-    set_conversation_id,
-)
+from autobots_devtools_shared_lib.common.observability import get_logger, set_conversation_id
 from autobots_devtools_shared_lib.dynagent import Dynagent
 from langchain.tools import ToolRuntime, tool
 
-from autobots_agents_jarvis.domains.jarvis.services import get_forecast as weather_get_forecast
-from autobots_agents_jarvis.domains.jarvis.services import get_joke, list_categories
-from autobots_agents_jarvis.domains.jarvis.services import get_weather as weather_get_weather
+from autobots_agents_jarvis.common.tools.validation_tools import validate_email
+from autobots_agents_jarvis.domains.concierge.services import get_forecast as weather_get_forecast
+from autobots_agents_jarvis.domains.concierge.services import get_joke, list_categories
+from autobots_agents_jarvis.domains.concierge.services import get_weather as weather_get_weather
 
 logger = get_logger(__name__)
 
@@ -29,6 +27,7 @@ def tell_joke(runtime: ToolRuntime[None, Dynagent], category: str) -> str:
         A formatted joke string
     """
     session_id = runtime.state.get("session_id", "default")
+    set_conversation_id(session_id)
     set_conversation_id(session_id)
     logger.info(f"Telling joke for session {session_id}, category: {category}")
 
@@ -62,6 +61,7 @@ def get_weather(runtime: ToolRuntime[None, Dynagent], location: str) -> str:
     """
     session_id = runtime.state.get("session_id", "default")
     set_conversation_id(session_id)
+    set_conversation_id(session_id)
     logger.info(f"Getting weather for session {session_id}, location: {location}")
 
     weather_data = weather_get_weather(location)
@@ -89,6 +89,7 @@ def get_forecast(runtime: ToolRuntime[None, Dynagent], location: str, days: int 
     """
     session_id = runtime.state.get("session_id", "default")
     set_conversation_id(session_id)
+    set_conversation_id(session_id)
     logger.info(f"Getting forecast for session {session_id}, location: {location}, days: {days}")
 
     forecast_data = weather_get_forecast(location, days)
@@ -104,8 +105,11 @@ def get_forecast(runtime: ToolRuntime[None, Dynagent], location: str, days: int 
 # --- Registration entry-point (called once at app startup) ---
 
 
-def register_jarvis_tools() -> None:
-    """Register all 4 Jarvis tools into the dynagent usecase pool."""
+def register_concierge_tools() -> None:
+    """Register all Concierge tools into the dynagent usecase pool.
+
+    Includes joke and weather tools plus shared validation tools (validate_email).
+    """
     from autobots_devtools_shared_lib.dynagent import register_usecase_tools
 
     register_usecase_tools(
@@ -114,5 +118,6 @@ def register_jarvis_tools() -> None:
             get_joke_categories,
             get_weather,
             get_forecast,
+            validate_email,
         ]
     )

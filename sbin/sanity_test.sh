@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# ABOUTME: Orchestrator for sanity tests - validates Dynagent via Jarvis canary.
-# Supports separate-clone CI via SHARED_LIB_DIR, JARVIS_DIR, WS_ROOT, VENV.
+# ABOUTME: Orchestrator for sanity tests - validates Dynagent via Concierge canary.
+# Supports separate-clone CI via SHARED_LIB_DIR, CONCIERGE_DIR, WS_ROOT, VENV.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-JARVIS_DIR="${JARVIS_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
-WS_ROOT="${WS_ROOT:-$(cd "$JARVIS_DIR/.." && pwd)}"
+CONCIERGE_DIR="${CONCIERGE_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+WS_ROOT="${WS_ROOT:-$(cd "$CONCIERGE_DIR/.." && pwd)}"
 SHARED_LIB_DIR="${SHARED_LIB_DIR:-$WS_ROOT/autobots-devtools-shared-lib}"
 VENV="${VENV:-$WS_ROOT/.venv}"
-ENV_FILE="${ENV_FILE:-$JARVIS_DIR/.env}"
+ENV_FILE="${ENV_FILE:-$CONCIERGE_DIR/.env}"
 
 cd "$WS_ROOT"
 
@@ -28,8 +28,8 @@ if [ ! -d "$SHARED_LIB_DIR" ]; then
   echo "Error: Missing shared-lib at $SHARED_LIB_DIR" >&2
   exit 1
 fi
-if [ ! -d "$JARVIS_DIR" ]; then
-  echo "Error: Missing jarvis at $JARVIS_DIR" >&2
+if [ ! -d "$CONCIERGE_DIR" ]; then
+  echo "Error: Missing concierge at $CONCIERGE_DIR" >&2
   exit 1
 fi
 
@@ -44,7 +44,7 @@ if [ "${SANITY_SKIP_SETUP:-0}" != "1" ]; then
   if [ -f "$WS_ROOT/Makefile" ]; then
     make setup install install-dev
   else
-    echo "Warning: No Makefile at $WS_ROOT - skipping setup. Set SANITY_SKIP_SETUP=1 and ensure venv has shared-lib + jarvis installed." >&2
+    echo "Warning: No Makefile at $WS_ROOT - skipping setup. Set SANITY_SKIP_SETUP=1 and ensure venv has shared-lib + concierge installed." >&2
   fi
 fi
 
@@ -59,5 +59,5 @@ if "$VENV/bin/python" -c "import playwright" 2>/dev/null; then
 fi
 
 # 5. Run sanity tests
-cd "$JARVIS_DIR"
-"$VENV/bin/python" -m pytest "$JARVIS_DIR/tests/sanity" -v -m sanity
+cd "$CONCIERGE_DIR"
+"$VENV/bin/python" -m pytest "$CONCIERGE_DIR/tests/sanity" -v -m sanity

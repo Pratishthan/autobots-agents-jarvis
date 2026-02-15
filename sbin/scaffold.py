@@ -2,11 +2,14 @@
 """Scaffold your project after cloning from the autobots-agents-jarvis template.
 
 Run this script from the root of your newly cloned repo to rename everything
-from "jarvis" to your project name. The script transforms the repo in-place
-and deletes itself when done.
+to your project name. The script handles two naming levels:
+
+  1. Source root: autobots_agents_jarvis -> autobots_<project>
+  2. Primary domain: concierge -> <domain> (defaults to project name)
 
 Usage:
     python3 sbin/scaffold.py kbe-pay
+    python3 sbin/scaffold.py kbe-pay --primary-domain nurture
     python3 sbin/scaffold.py kbe-pay --display-name "KBE Pay" --description "My App"
     python3 sbin/scaffold.py kbe-pay --dry-run
 """
@@ -60,7 +63,8 @@ ARTIFACTS_TO_CLEAN = [
     "poetry.lock",
 ]
 
-# Demo content to remove (paths relative to project root)
+# Demo content to remove (paths relative to project root).
+# Only removes the extra demo domains; keeps the primary domain (concierge).
 PATHS_TO_REMOVE = [
     "src/autobots_agents_jarvis/domains/customer_support",
     "src/autobots_agents_jarvis/domains/sales",
@@ -69,14 +73,20 @@ PATHS_TO_REMOVE = [
     "sbin/run_customer_support.sh",
     "sbin/run_sales.sh",
     "sbin/run_all_domains.sh",
-    "tests/unit/domains",
-    "tests/integration/domains",
+    "tests/unit/domains/customer_support",
+    "tests/unit/domains/sales",
+    "tests/integration/domains/customer_support",
+    "tests/integration/domains/sales",
+    "tests/sanity/domains/customer_support",
+    "tests/sanity/domains/sales",
 ]
+
+_NAME_RE = re.compile(r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$")
 
 
 def derive_names(name: str) -> dict[str, str]:
     """Derive all project name variants from the input name (e.g., 'kbe-pay')."""
-    if not re.match(r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$", name):
+    if not _NAME_RE.match(name):
         print(f"Error: name '{name}' must be lowercase with hyphens (e.g., 'kbe-pay', 'my-app')")
         sys.exit(1)
 
@@ -100,43 +110,85 @@ def derive_names(name: str) -> dict[str, str]:
     }
 
 
-def build_replacements(names: dict[str, str]) -> list[tuple[str, str]]:
-    """Build ordered list of (old, new) string replacements. Most-specific first."""
-    sn = names["snake_name"]
-    upper_sn = sn.upper()
-    pkg = names["package_name"]
-    pascal = names["pascal_name"]
-    display = names["display_name"]
-    repo = names["repo_name"]
+def derive_domain_names(domain_name: str) -> dict[str, str]:
+    """Derive domain-level name variants from a domain name (e.g., 'nurture')."""
+    if not _NAME_RE.match(domain_name):
+        print(
+            f"Error: domain name '{domain_name}' must be lowercase with hyphens "
+            f"(e.g., 'nurture', 'lead-gen')"
+        )
+        sys.exit(1)
+
+    snake = domain_name.replace("-", "_")
+    parts = domain_name.split("-")
+    pascal = "".join(p.capitalize() for p in parts)
+    display = " ".join(p.capitalize() for p in parts)
+    upper = snake.upper()
+
+    return {
+        "domain_name": domain_name,
+        "domain_snake": snake,
+        "domain_pascal": pascal,
+        "domain_display": display,
+        "domain_upper": upper,
+    }
+
+
+def _build_source_root_replacements(names: dict[str, str]) -> list[tuple[str, str]]:
+    """Replacements for the source-root / package level (autobots_agents_jarvis -> new pkg)."""
+    return [
+        ("autobots-agents-jarvis", names["repo_name"]),
+        ("autobots_agents_jarvis", names["package_name"]),
+    ]
+
+
+def _build_domain_replacements(domain_names: dict[str, str]) -> list[tuple[str, str]]:
+    """Replacements for the domain level (concierge -> new domain)."""
+    sn = domain_names["domain_snake"]
+    pascal = domain_names["domain_pascal"]
+    display = domain_names["domain_display"]
+    upper = domain_names["domain_upper"]
 
     return [
-        # Package/project names (most specific first to avoid partial matches)
-        ("autobots-agents-jarvis", repo),
-        ("autobots_agents_jarvis", pkg),
-        # Class names
-        ("JarvisSettings", f"{pascal}Settings"),
+        # Class names (most specific first)
+        ("ConciergeSettings", f"{pascal}Settings"),
         # Function names
-        ("get_jarvis_settings", f"get_{sn}_settings"),
-        ("init_jarvis_settings", f"init_{sn}_settings"),
-        ("register_jarvis_tools", f"register_{sn}_tools"),
-        ("_get_jarvis_batch_agents", f"_get_{sn}_batch_agents"),
-        ("jarvis_registered", f"{sn}_registered"),
+        ("get_concierge_settings", f"get_{sn}_settings"),
+        ("init_concierge_settings", f"init_{sn}_settings"),
+        ("register_concierge_tools", f"register_{sn}_tools"),
+        ("_get_concierge_batch_agents", f"_get_{sn}_batch_agents"),
+        ("concierge_tools_registered", f"{sn}_tools_registered"),
+        ("concierge_registered", f"{sn}_registered"),
         # App/service names
-        ("jarvis_batch", f"{sn}_batch"),
-        ("jarvis_chat", f"{sn}_chat"),
-        ("jarvis-chat", f"{sn}-chat"),
-        ("jarvis_tools", f"{sn}_tools"),
-        ("jarvis-invoke-demo", f"{sn}-invoke-demo"),
+        ("concierge_batch", f"{sn}_batch"),
+        ("concierge_chat", f"{sn}_chat"),
+        ("concierge-chat", f"{sn}-chat"),
+        ("concierge_tools", f"{sn}_tools"),
+        ("concierge-invoke-demo", f"{sn}-invoke-demo"),
         # File/path references
-        ("run_jarvis", f"run_{sn}"),
-        ("jarvis_ui", f"{sn}_ui"),
-        # Uppercase references (shell variables like JARVIS_DIR, _JARVIS_CONFIG)
-        ("JARVIS", upper_sn),
+        ("run_concierge", f"run_{sn}"),
+        ("concierge_dir", f"{sn}_dir"),
+        ("concierge_agents", f"{sn}_agents"),
+        # Uppercase references (shell variables like _CONCIERGE_CONFIG, CONCIERGE_DIR)
+        ("_CONCIERGE_CONFIG", f"_{upper}_CONFIG"),
+        ("CONCIERGE_DIR", f"{upper}_DIR"),
+        ("CONCIERGE", upper),
         # Display name (capitalized in docs/comments)
-        ("Jarvis", display),
+        ("Concierge", display),
         # Catch-all for remaining lowercase references (config paths, env vars, etc.)
-        ("jarvis", sn),
+        ("concierge", sn),
     ]
+
+
+def build_replacements(
+    names: dict[str, str], domain_names: dict[str, str]
+) -> list[tuple[str, str]]:
+    """Build ordered list of (old, new) string replacements.
+
+    Source-root replacements go first (longer, more specific strings) followed
+    by domain-level replacements. This ordering prevents partial-match issues.
+    """
+    return _build_source_root_replacements(names) + _build_domain_replacements(domain_names)
 
 
 def is_binary(path: Path) -> bool:
@@ -218,15 +270,20 @@ def replace_in_files(
 def rename_paths(
     project_dir: Path,
     names: dict[str, str],
+    domain_names: dict[str, str],
     *,
     dry_run: bool = False,
 ) -> None:
-    """Rename directories and files containing 'jarvis' in their name.
+    """Rename directories and files for both naming levels.
+
+    Handles two levels:
+      - Source root: autobots_agents_jarvis -> new package name
+      - Domain: concierge -> new domain name (dirs and files)
 
     Works bottom-up (deepest paths first) to avoid breaking parent paths.
     """
-    sn = names["snake_name"]
     pkg = names["package_name"]
+    domain_sn = domain_names["domain_snake"]
 
     paths_to_rename: list[tuple[Path, Path]] = []
 
@@ -237,21 +294,24 @@ def rename_paths(
         if any(part in SKIP_DIRS for part in root_path.relative_to(project_dir).parts):
             continue
 
-        # Rename files
+        # Rename files containing "concierge" in their name
         for filename in files:
-            if "jarvis" in filename:
+            if "concierge" in filename:
                 old_path = root_path / filename
-                new_name = filename.replace("jarvis", sn)
+                new_name = filename.replace("concierge", domain_sn)
                 new_path = root_path / new_name
                 paths_to_rename.append((old_path, new_path))
 
         # Rename directories
         dir_name = root_path.name
         if dir_name == "autobots_agents_jarvis":
+            # Source-root level rename
             new_path = root_path.parent / pkg
             paths_to_rename.append((root_path, new_path))
-        elif dir_name == "jarvis" and root_path.parent.name in ("domains", "agent_configs"):
-            new_path = root_path.parent / sn
+        elif dir_name == "concierge" and root_path.parent.name in ("domains", "agent_configs"):
+            # Domain-level rename (src/.../domains/concierge, agent_configs/concierge,
+            # and also tests/*/domains/concierge since parent.name == "domains")
+            new_path = root_path.parent / domain_sn
             paths_to_rename.append((root_path, new_path))
 
     for old_path, new_path in paths_to_rename:
@@ -265,11 +325,87 @@ def rename_paths(
                 print(f"Renamed: {rel_old} -> {rel_new}")
 
 
+def _convert_config_to_standalone(
+    file_path: Path, file_name: str, *, dry_run: bool = False
+) -> bool:
+    """Convert a config file from monorepo to standalone mode using markers.
+
+    Looks for lines with # MONOREPO and # STANDALONE markers and:
+    - Comments out lines with # MONOREPO
+    - Uncomments lines with # STANDALONE
+
+    Args:
+        file_path: Path to the config file
+        file_name: Display name for logging (e.g., ".pre-commit-config.yaml")
+        dry_run: If True, only report what would be done
+
+    Returns:
+        True if changes were made, False otherwise
+    """
+    if not file_path.exists():
+        return False
+
+    try:
+        content = file_path.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, PermissionError):
+        return False
+
+    new_lines = []
+    changes_made = False
+
+    for line in content.splitlines():
+        stripped = line.lstrip()
+        indent = line[: len(line) - len(stripped)]
+
+        # Monorepo line (active, needs to be commented out)
+        if "# MONOREPO" in line and not stripped.startswith("#"):
+            new_lines.append(indent + "# " + stripped)
+            changes_made = True
+        # Standalone line (commented, needs to be uncommented)
+        elif "# STANDALONE" in line and stripped.startswith("# "):
+            # Remove "# " from the beginning of stripped
+            new_lines.append(indent + stripped[2:])
+            changes_made = True
+        else:
+            new_lines.append(line)
+
+    if changes_made:
+        new_content = "\n".join(new_lines) + ("\n" if content.endswith("\n") else "")
+        if dry_run:
+            print(f"[DRY RUN] Would update {file_name}: monorepo -> standalone mode")
+        else:
+            file_path.write_text(new_content, encoding="utf-8")
+            print(f"Updated: {file_name} (monorepo -> standalone mode)")
+
+    return changes_made
+
+
+def apply_standalone_repo_config(project_dir: Path, *, dry_run: bool = False) -> None:
+    """Apply standalone-repo config: local .venv, no shared-lib, pyright from repo root.
+
+    Edits .pre-commit-config.yaml, Makefile, and pyproject.toml so the project
+    uses a venv in the repo root and does not depend on a parent monorepo.
+
+    Uses # MONOREPO and # STANDALONE markers in config files for conversion.
+    """
+    # Convert all config files from monorepo to standalone mode
+    _convert_config_to_standalone(
+        project_dir / ".pre-commit-config.yaml", ".pre-commit-config.yaml", dry_run=dry_run
+    )
+    _convert_config_to_standalone(project_dir / "Makefile", "Makefile", dry_run=dry_run)
+    _convert_config_to_standalone(project_dir / "pyproject.toml", "pyproject.toml", dry_run=dry_run)
+
+
 def scaffold(args: argparse.Namespace) -> None:
     """Main scaffolding logic — transforms the repo in-place."""
     names = derive_names(args.name)
     if args.display_name:
         names["display_name"] = args.display_name
+
+    # Domain names: use --primary-domain if given, else same as project name
+    domain_input = args.primary_domain if args.primary_domain else args.name
+    domain_names = derive_domain_names(domain_input)
+
     project_dir = Path(__file__).resolve().parent.parent
 
     # Verify we're in the template repo
@@ -282,61 +418,66 @@ def scaffold(args: argparse.Namespace) -> None:
     dry_run = args.dry_run
 
     print(f"Scaffolding project: {names['repo_name']}")
-    print(f"  Package:  {names['package_name']}")
-    print(f"  Display:  {names['display_name']}")
-    print(f"  Domain:   {names['snake_name']}")
+    print(f"  Package:        {names['package_name']}")
+    print(f"  Display:        {names['display_name']}")
+    print(f"  Primary domain: {domain_names['domain_snake']}")
     if args.description:
-        print(f"  Desc:     {args.description}")
-    if args.port != 1337:
-        print(f"  Port:     {args.port}")
+        print(f"  Desc:           {args.description}")
+    if args.port != 2337:
+        print(f"  Port:           {args.port}")
     print()
 
     # Step 1: Clean template artifacts
     clean_artifacts(project_dir, dry_run=dry_run)
 
-    # Step 2: Remove demo content
+    # Step 2: Remove demo content (customer_support, sales)
     remove_demo_content(project_dir, dry_run=dry_run)
 
-    # Step 3: Content replacements
-    replacements = build_replacements(names)
+    # Step 3: Content replacements (source-root + domain level)
+    replacements = build_replacements(names, domain_names)
     replace_in_files(project_dir, replacements, dry_run=dry_run)
 
-    # Step 4 & 5: Rename directories and files
-    rename_paths(project_dir, names, dry_run=dry_run)
+    # Step 4: Rename directories and files
+    rename_paths(project_dir, names, domain_names, dry_run=dry_run)
 
-    # Step 6: Post-processing overrides
+    # Step 4.5: Apply standalone-repo config (local .venv, no shared-lib, pyright from repo root)
+    apply_standalone_repo_config(project_dir, dry_run=dry_run)
+
+    # Step 5: Post-processing overrides
     if not dry_run:
         # Update description if provided
         if args.description:
             pyproject = project_dir / "pyproject.toml"
             if pyproject.exists():
                 content = pyproject.read_text()
-                old_desc = f"{names['display_name']} - Multi-agent AI Assistant Demo"
+                # Match the template's default description
+                old_desc = "Jarvis - Multi-agent AI Assistant Demo"
                 content = content.replace(old_desc, args.description)
                 pyproject.write_text(content)
                 print("Updated description in pyproject.toml")
 
         # Update port if non-default
-        if args.port != 1337:
+        if args.port != 2337:
             makefile = project_dir / "Makefile"
             if makefile.exists():
                 content = makefile.read_text()
-                content = content.replace("CHAINLIT_PORT = 1337", f"CHAINLIT_PORT = {args.port}")
+                content = content.replace("CHAINLIT_PORT = 2337", f"CHAINLIT_PORT = {args.port}")
                 makefile.write_text(content)
 
             for settings_file in project_dir.rglob("settings.py"):
                 content = settings_file.read_text()
-                content = content.replace("default=1337", f"default={args.port}")
+                content = content.replace("default=2337", f"default={args.port}")
                 settings_file.write_text(content)
 
-            run_script = project_dir / "sbin" / f"run_{names['snake_name']}.sh"
+            domain_sn = domain_names["domain_snake"]
+            run_script = project_dir / "sbin" / f"run_{domain_sn}.sh"
             if run_script.exists():
                 content = run_script.read_text()
-                content = content.replace("PORT:-1337", f"PORT:-{args.port}")
+                content = content.replace("PORT:-2337", f"PORT:-{args.port}")
                 run_script.write_text(content)
             print(f"Updated port to {args.port}")
 
-    # Step 7: Self-delete (last step)
+    # Step 6: Self-delete (last step)
     script_path = Path(__file__).resolve()
     if dry_run:
         print("[DRY RUN] Would delete: sbin/scaffold.py")
@@ -344,6 +485,7 @@ def scaffold(args: argparse.Namespace) -> None:
         script_path.unlink()
         print("Removed: sbin/scaffold.py")
 
+    domain_display = domain_names["domain_display"]
     print()
     print("Done! Your project is ready.")
     print()
@@ -352,7 +494,7 @@ def scaffold(args: argparse.Namespace) -> None:
     print("  # Edit .env with your API keys")
     print("  make install-dev")
     print("  make all-checks")
-    print("  make chainlit-dev")
+    print(f"  make chainlit-dev   # starts {domain_display} on port {args.port}")
 
 
 def main() -> None:
@@ -364,6 +506,12 @@ def main() -> None:
         "name",
         help="Project name using lowercase and hyphens (e.g., 'kbe-pay', 'my-app'). "
         "The package will be named 'autobots-{name}'.",
+    )
+    parser.add_argument(
+        "--primary-domain",
+        default=None,
+        help="Primary domain name (e.g., 'nurture'). Defaults to the project name. "
+        "Controls the domain-level rename (concierge -> your domain).",
     )
     parser.add_argument(
         "--display-name",
@@ -378,8 +526,8 @@ def main() -> None:
     parser.add_argument(
         "--port",
         type=int,
-        default=1337,
-        help="Default Chainlit port (default: 1337).",
+        default=2337,
+        help="Default Chainlit port (default: 2337).",
     )
     parser.add_argument(
         "--dry-run",
