@@ -1,22 +1,28 @@
-# Autobots-Agents-Jarvis - Multi-Domain Multi-Agent AI Application
+# Jarvis - Multi-Domain Multi-Agent AI Application
 
-This is a demonstration repository showcasing how to use the `autobots-devtools-shared-lib.dynagent` framework to build **multi-domain multi-agent AI applications**. It demonstrates production-ready architectural patterns for organizing multiple business domains with shared and domain-specific code.
+This is a demonstration repository showcasing how to use the **DynAgent** (`autobots-devtools-shared-lib.dynagent)` framework to build **multi-domain multi-agent AI applications**. It demonstrates production-ready architectural patterns for organizing multiple business domains with shared and domain-specific code.
+
+## Ready to build?
+When you are ready to build your own **Jarvis** use case. Head to the [Scaffolding](docs/user-manuals/scaffolding.md) document.
 
 ## Overview
 
 This repository demonstrates a **multi-domain architecture** with three independent business domains, each with specialized multi-agent systems:
 
 ### 🤖 **Concierge Domain** (General Assistant)
+
 - **Welcome Agent** - Routes to joke or weather agents
 - **Joke Agent** - Humor delivery with structured output (batch-enabled)
 - **Weather Agent** - Weather information with forecasts
 
 ### 🎧 **Customer Support Domain**
+
 - **Support Coordinator** - Routes to ticket or knowledge base agents
 - **Ticket Agent** - Create, update, search support tickets (batch-enabled)
 - **Knowledge Agent** - Search knowledge base and retrieve articles
 
 ### 💼 **Sales Domain**
+
 - **Sales Coordinator** - Routes to lead qualification or product agents
 - **Lead Qualification Agent** - Qualify leads with intelligent scoring (batch-enabled)
 - **Product Recommendation Agent** - Product catalog and recommendations
@@ -37,27 +43,31 @@ This repository demonstrates a **multi-domain architecture** with three independ
 ### Multi-Domain Structure
 
 ```
-autobots-agents-concierge/
-├── agent_configs/          # Agent configurations per domain
-│   ├── concierge/            # Concierge domain config
-│   ├── customer-support/  # Customer support domain config
-│   └── sales/             # Sales domain config
+autobots-agents-jarvis/
+├── agent_configs/              # Agent configurations per domain
+│   ├── concierge/              # Concierge domain config
+│   ├── customer-support/       # Customer support domain config
+│   └── sales/                  # Sales domain config
 │
-├── src/autobots_agents_concierge/
-│   ├── common/            # SHARED code across all domains
-│   │   ├── tools/         # Shared validation tools
-│   │   ├── services/      # Shared service patterns
-│   │   └── utils/         # Shared utilities
+├── src/autobots_agents_jarvis/
+│   ├── common/                 # SHARED code across all domains
+│   │   ├── tools/              # Shared validation tools
+│   │   ├── services/           # Shared service patterns
+│   │   └── utils/               # Shared utilities
 │   │
-│   └── domains/           # DOMAIN-SPECIFIC code
-│       ├── concierge/        # Jarvis implementation
-│       ├── customer_support/  # Customer support implementation
-│       └── sales/         # Sales implementation
+│   ├── configs/                # Shared application settings
+│   │   └── settings.py
+│   │
+│   └── domains/                # DOMAIN-SPECIFIC code
+│       ├── concierge/          # Concierge (jokes, weather)
+│       ├── customer_support/   # Customer support implementation
+│       └── sales/              # Sales implementation
 ```
 
 ### Domain Pattern
 
 Each domain follows the same structure:
+
 ```
 domains/{name}/
 ├── server.py      # Chainlit server entry point
@@ -97,7 +107,6 @@ domains/{name}/
    ```bash
    cd autobots-agents-jarvis
    ```
-
 2. **Install dependencies**
 
    ```bash
@@ -108,7 +117,6 @@ domains/{name}/
    # Or using poetry directly
    poetry install
    ```
-
 3. **Configure environment**
 
    ```bash
@@ -128,19 +136,20 @@ make chainlit-all
 ./sbin/run_all_domains.sh
 ```
 
-Then open in browser:
-- 🤖 **Jarvis**: http://localhost:2337
-- 🎧 **Customer Support**: http://localhost:1338
-- 💼 **Sales**: http://localhost:1339
+Then open in browser (ports used by `run_all_domains.sh`):
+
+- 🤖 **Concierge**: http://localhost:2337
+- 🎧 **Customer Support**: http://localhost:2338
+- 💼 **Sales**: http://localhost:2339
 
 Press `Ctrl+C` to stop all domains.
 
 #### Option 2: Run Individual Domains
 
 ```bash
-# Run Jarvis only (port 2337)
+# Run Concierge only (port 2337)
 make chainlit-dev     # Concierge UI at http://localhost:2337
-# OR: ./sbin/run_jarvis.sh
+# OR: ./sbin/run_concierge.sh
 
 # Run Customer Support only (port 1338)
 make chainlit-customer-support
@@ -158,6 +167,7 @@ make chainlit-sales
 **Purpose**: General-purpose AI assistant for jokes and weather
 
 **Agents**:
+
 - **welcome_agent** (default) - Routes users to joke or weather agents
 - **joke_agent** (batch-enabled) - Tells categorized jokes with structured output
 - **weather_agent** - Provides weather info and forecasts
@@ -171,6 +181,7 @@ make chainlit-sales
 **Purpose**: Customer service with ticket management and knowledge base
 
 **Agents**:
+
 - **support_coordinator** (default) - Routes to ticket or knowledge agents
 - **ticket_agent** (batch-enabled) - Create, update, search tickets
 - **knowledge_agent** - Search KB articles and retrieve full content
@@ -184,6 +195,7 @@ make chainlit-sales
 **Purpose**: Lead qualification and product recommendations
 
 **Agents**:
+
 - **sales_coordinator** (default) - Routes to lead qualification or product agents
 - **lead_qualification_agent** (batch-enabled) - Qualify leads with scoring
 - **product_recommendation_agent** - Product catalog and recommendations
@@ -213,7 +225,8 @@ def validate_phone(phone: str) -> str:
     # ...
 ```
 
-**Location**: `src/autobots_agents_concierge/common/`
+**Location**: `src/autobots_agents_jarvis/common/`
+
 - `common/tools/` - Shared validation tools
 - `common/services/` - Shared service patterns
 - `common/utils/` - Shared formatting utilities
@@ -231,7 +244,8 @@ def create_ticket(runtime: ToolRuntime[None, Dynagent], title: str, description:
 ```
 
 **Pattern**:
-- Each domain in `src/autobots_agents_concierge/domains/{name}/`
+
+- Each domain in `src/autobots_agents_jarvis/domains/{name}/`
 - Each has: `server.py`, `tools.py`, `services.py`
 - Domains opt-in to shared tools by calling `register_validation_tools()`
 
@@ -254,7 +268,7 @@ Three agents across domains support batch processing for parallel request handli
 ### Concierge Domain - `joke_agent`
 
 ```python
-from autobots_agents_jarvis.domains.jarvis.jarvis_batch import jarvis_batch
+from autobots_agents_jarvis.domains.concierge.concierge_batch import concierge_batch
 
 prompts = [
     "Tell me a programming joke",
@@ -262,7 +276,7 @@ prompts = [
     "Give me a knock-knock joke",
 ]
 
-result = jarvis_batch("joke_agent", prompts)
+result = concierge_batch("joke_agent", prompts, user_id="my_user")
 
 for record in result.results:
     if record.success:
@@ -272,6 +286,7 @@ for record in result.results:
 ### Customer Support Domain - `ticket_agent`
 
 Batch process ticket operations:
+
 ```python
 from autobots_devtools_shared_lib.dynagent import batch_invoker
 
@@ -286,6 +301,7 @@ result = batch_invoker("ticket_agent", prompts)
 ### Sales Domain - `lead_qualification_agent`
 
 Batch qualify multiple leads:
+
 ```python
 from autobots_devtools_shared_lib.dynagent import batch_invoker
 
@@ -342,7 +358,7 @@ make pre-commit
 
 ### Agent Configuration
 
-Agents are configured in `configs/concierge/agents.yaml`:
+Agents are configured per domain under `agent_configs/{domain}/`. For example, Concierge uses `agent_configs/concierge/agents.yaml`:
 
 ```yaml
 agents:
@@ -350,7 +366,6 @@ agents:
     prompt: "01-joke"
     output_schema: "joke-output.json"
     batch_enabled: true
-    approach: "direct"
     tools:
       - "tell_joke"
       - "get_joke_categories"
@@ -362,7 +377,7 @@ agents:
 
 See `.env.example` for all available configuration options:
 
-- `DYNAGENT_CONFIG_ROOT_DIR` - Path to agent configs (default: `configs/jarvis`)
+- `DYNAGENT_CONFIG_ROOT_DIR` - Path to agent configs for the domain (e.g. `agent_configs/concierge`, `agent_configs/customer-support`, `agent_configs/sales`)
 - `GOOGLE_API_KEY` - Required for Gemini LLM
 - `LANGFUSE_*` - Optional observability configuration
 - `OAUTH_GITHUB_*` - Optional GitHub OAuth for authentication
@@ -370,45 +385,55 @@ See `.env.example` for all available configuration options:
 ## Project Structure
 
 ```
-autobots-agents-concierge/
-├── src/autobots_agents_concierge/
-│   ├── agents/
-│   │   └── jarvis_tools.py          # Tool implementations
-│   ├── config/
-│   │   └── settings.py              # Pydantic settings
-│   ├── services/
-│   │   ├── joke_service.py          # Joke data service
-│   │   ├── weather_service.py       # Weather data service
-│   │   └── jarvis_batch.py          # Batch processing
-│   ├── utils/
-│   │   └── formatting.py            # Output formatters
-│   └── jarvis_ui.py                # Chainlit app entry point
-├── configs/concierge/
-│   ├── agents.yaml                  # Agent definitions
-│   ├── prompts/                     # Agent prompt templates
-│   │   ├── 00-welcome.md
-│   │   ├── 01-joke.md
-│   │   └── 02-weather.md
-│   └── schemas/                     # Output JSON schemas
-│       ├── joke-output.json
-│       └── weather-output.json
+autobots-agents-jarvis/
+├── src/autobots_agents_jarvis/
+│   ├── common/                      # Shared across all domains
+│   │   ├── tools/                   # e.g. validation_tools.py
+│   │   ├── services/
+│   │   └── utils/                   # e.g. formatting.py
+│   ├── configs/
+│   │   └── settings.py              # Shared Pydantic settings
+│   └── domains/
+│       ├── concierge/
+│       │   ├── server.py            # Chainlit entry (port 2337)
+│       │   ├── tools.py             # tell_joke, get_weather, etc.
+│       │   ├── services.py          # Joke and weather services
+│       │   ├── concierge_batch.py   # Batch processing for joke_agent
+│       │   └── settings.py          # Domain-specific settings
+│       ├── customer_support/
+│       │   ├── server.py            # Chainlit entry (port 1338)
+│       │   ├── tools.py
+│       │   └── services.py
+│       └── sales/
+│           ├── server.py            # Chainlit entry (port 1339)
+│           ├── tools.py
+│           └── services.py
+├── agent_configs/
+│   ├── concierge/
+│   │   ├── agents.yaml
+│   │   ├── prompts/                 # 00-welcome.md, 01-joke.md, 02-weather.md
+│   │   └── schemas/                 # joke-output.json, weather-output.json
+│   ├── customer-support/
+│   └── sales/
 ├── tests/
-│   ├── unit/                        # Unit tests
-│   └── integration/                 # Integration tests
-├── pyproject.toml                   # Package configuration
-└── README.md                        # This file
+│   ├── unit/                        # Unit tests (e.g. tests/unit/domains/concierge/)
+│   ├── integration/                 # Integration tests
+│   └── sanity/                      # Sanity / canary tests
+├── sbin/                            # Run scripts (run_concierge.sh, run_all_domains.sh, etc.)
+├── pyproject.toml
+└── README.md
 ```
 
 ## Extending Jarvis
 
 ### Adding a New Agent
 
-1. **Define the agent** in `configs/concierge/agents.yaml`
-2. **Create prompt** in `configs/concierge/prompts/`
-3. **Add output schema** (if needed) in `configs/concierge/schemas/`
-4. **Implement tools** in `src/autobots_agents_concierge/agents/jarvis_tools.py`
-5. **Register tools** in `register_jarvis_tools()`
-6. **Add tests** in `tests/`
+1. **Define the agent** in `agent_configs/{domain}/agents.yaml` (e.g. `agent_configs/concierge/agents.yaml`)
+2. **Create prompt** in `agent_configs/{domain}/prompts/`
+3. **Add output schema** (if needed) in `agent_configs/{domain}/schemas/`
+4. **Implement tools** in `src/autobots_agents_jarvis/domains/{domain}/tools.py`
+5. **Register tools** in that domain’s `register_*_tools()` (e.g. `register_concierge_tools()`)
+6. **Add tests** in `tests/unit/domains/{domain}/` or `tests/integration/domains/{domain}/`
 
 ### Adding a New Tool
 
@@ -423,7 +448,7 @@ def my_new_tool(runtime: ToolRuntime[None, Dynagent], param: str) -> str:
     # Your implementation here
     return "Result"
 
-# Then register in register_jarvis_tools()
+# Then register in that domain's register_*_tools() (e.g. register_concierge_tools())
 ```
 
 ## Docker Support
@@ -452,10 +477,10 @@ make install-dev
 
 ### Agent not found errors
 
-Check that `DYNAGENT_CONFIG_ROOT_DIR` points to `configs/jarvis`:
+Ensure `DYNAGENT_CONFIG_ROOT_DIR` points to the correct domain config (e.g. for Concierge):
 
 ```bash
-export DYNAGENT_CONFIG_ROOT_DIR=configs/jarvis
+export DYNAGENT_CONFIG_ROOT_DIR=agent_configs/concierge
 ```
 
 ### Missing Google API key
@@ -468,16 +493,17 @@ GOOGLE_API_KEY=your-actual-key-here
 
 ## Domain Summary
 
-| Domain | Port | Default Agent | Batch Agent | Key Features |
-|--------|------|---------------|-------------|--------------|
-| 🤖 **Jarvis** | 2337 | welcome_agent | joke_agent | Jokes (4 categories), Weather (6 cities) |
-| 🎧 **Customer Support** | 1338 | support_coordinator | ticket_agent | Tickets, Knowledge Base (4 articles), Shared validation tools |
-| 💼 **Sales** | 1339 | sales_coordinator | lead_qualification_agent | Lead scoring (hot/warm/cold), Product catalog (6 products, 3 tiers) |
+| Domain                       | Port | Default Agent       | Batch Agent              | Key Features                                                        |
+| ---------------------------- | ---- | ------------------- | ------------------------ | ------------------------------------------------------------------- |
+| 🤖**Jarvis**           | 2337 | welcome_agent       | joke_agent               | Jokes (4 categories), Weather (6 cities)                            |
+| 🎧**Customer Support** | 1338 | support_coordinator | ticket_agent             | Tickets, Knowledge Base (4 articles), Shared validation tools       |
+| 💼**Sales**            | 1339 | sales_coordinator   | lead_qualification_agent | Lead scoring (hot/warm/cold), Product catalog (6 products, 3 tiers) |
 
 **Quick Access URLs** (when running `make chainlit-all`):
+
 - http://localhost:2337 - Jarvis
-- http://localhost:1338 - Customer Support
-- http://localhost:1339 - Sales
+- http://localhost:2338 - Customer Support
+- http://localhost:2339 - Sales
 
 ## License
 
