@@ -432,7 +432,7 @@ autobots-agents-jarvis/
 2. **Create prompt** in `agent_configs/{domain}/prompts/`
 3. **Add output schema** (if needed) in `agent_configs/{domain}/schemas/`
 4. **Implement tools** in `src/autobots_agents_jarvis/domains/{domain}/tools.py`
-5. **Register tools** in that domain’s `register_*_tools()` (e.g. `register_concierge_tools()`)
+5. **Register tools** in that domain's `register_*_tools()` (e.g. `register_concierge_tools()`)
 6. **Add tests** in `tests/unit/domains/{domain}/` or `tests/integration/domains/{domain}/`
 
 ### Adding a New Tool
