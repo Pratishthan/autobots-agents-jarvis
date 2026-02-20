@@ -1,7 +1,7 @@
 # ABOUTME: Concierge use-case tools — the tools that Concierge registers.
 # ABOUTME: Provides joke and weather functionality for demonstration purposes.
 
-from autobots_devtools_shared_lib.common.observability import get_logger, set_conversation_id
+from autobots_devtools_shared_lib.common.observability import get_logger, set_session_id
 from autobots_devtools_shared_lib.dynagent import Dynagent
 from langchain.tools import ToolRuntime, tool
 
@@ -27,7 +27,7 @@ def tell_joke(runtime: ToolRuntime[None, Dynagent], category: str) -> str:
         A formatted joke string
     """
     session_id = runtime.state.get("session_id", "default")
-    set_conversation_id(session_id)
+    set_session_id(session_id)
     logger.info(f"Telling joke for session {session_id}, category: {category}")
 
     joke_data = get_joke(category)
@@ -59,7 +59,7 @@ def get_weather(runtime: ToolRuntime[None, Dynagent], location: str) -> str:
         Formatted weather information
     """
     session_id = runtime.state.get("session_id", "default")
-    set_conversation_id(session_id)
+    set_session_id(session_id)
     logger.info(f"Getting weather for session {session_id}, location: {location}")
 
     weather_data = weather_get_weather(location)
@@ -86,7 +86,7 @@ def get_forecast(runtime: ToolRuntime[None, Dynagent], location: str, days: int 
         Formatted weather forecast
     """
     session_id = runtime.state.get("session_id", "default")
-    set_conversation_id(session_id)
+    set_session_id(session_id)
     logger.info(f"Getting forecast for session {session_id}, location: {location}, days: {days}")
 
     forecast_data = weather_get_forecast(location, days)

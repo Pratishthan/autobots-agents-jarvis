@@ -7,7 +7,7 @@ from autobots_devtools_shared_lib.common.observability import (
     TraceMetadata,
     get_logger,
     init_tracing,
-    set_conversation_id,
+    set_session_id,
 )
 from autobots_devtools_shared_lib.dynagent import BatchResult, batch_invoker
 from dotenv import load_dotenv
@@ -49,7 +49,7 @@ def concierge_batch(agent_name: str, records: list[str], user_id: str) -> BatchR
         ValueError: If agent_name is not batch-enabled or records is empty.
     """
     session_id = str(uuid.uuid4())
-    set_conversation_id(session_id)
+    set_session_id(session_id)
     logger.info(
         f"concierge_batch starting: agent={agent_name} records={len(records)} user_id={user_id}"
     )

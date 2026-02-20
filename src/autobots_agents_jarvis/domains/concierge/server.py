@@ -10,12 +10,13 @@ from autobots_devtools_shared_lib.common.observability import (
     flush_tracing,
     get_logger,
     init_tracing,
-    set_conversation_id,
+    set_session_id,
 )
 from autobots_devtools_shared_lib.dynagent import create_base_agent
 from autobots_devtools_shared_lib.dynagent.ui import stream_agent_events
 from dotenv import load_dotenv
 
+from autobots_agents_jarvis.common.services.context_setup import init_context_store
 from autobots_agents_jarvis.common.utils.formatting import format_structured_output
 from autobots_agents_jarvis.domains.concierge.settings import init_concierge_settings
 from autobots_agents_jarvis.domains.concierge.tools import register_concierge_tools
@@ -33,6 +34,9 @@ APP_NAME = "concierge_chat"
 
 # Register Concierge settings so shared-lib (dynagent) uses the same instance.
 init_concierge_settings()
+
+# Initialise write-through context store (Postgres + Redis).
+init_context_store()
 
 # Registration must precede AgentMeta.instance() (called inside create_base_agent).
 register_concierge_tools()
@@ -105,7 +109,7 @@ async def start():
         user_id=user_id,
         tags=[APP_NAME],
     )
-    set_conversation_id(cl.context.session.thread_id)
+    set_session_id(cl.context.session.thread_id)
     cl.user_session.set("trace_metadata", trace_metadata)
 
     await cl.Message(content="Hello! I'm Concierge. How can I help you today?").send()
@@ -114,7 +118,7 @@ async def start():
 @cl.on_message
 async def on_message(message: cl.Message):
     """Handle incoming messages from the user."""
-    set_conversation_id(cl.context.session.thread_id)
+    set_session_id(cl.context.session.thread_id)
 
     config: RunnableConfig = {
         "configurable": {

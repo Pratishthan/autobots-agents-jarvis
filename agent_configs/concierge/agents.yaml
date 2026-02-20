@@ -9,6 +9,10 @@ agents:
     tools:
       - "handoff"
       - "get_agent_list"
+      - "get_context_tool"
+      - "set_context_tool"
+      - "update_context_tool"
+      - "clear_context_tool"
 
   joke_agent:
     prompt: "01-joke"

@@ -19,6 +19,15 @@ class AppSettings(DynagentSettings):
     port: int = Field(default=2337, description="Application port")
     debug: bool = Field(default=False, description="Enable debug mode")
 
+    # Persistence settings
+    # Use JARVIS_DATABASE_URL (not DATABASE_URL) to avoid Chainlit intercepting it.
+    database_url: str = Field(
+        default="",
+        validation_alias="JARVIS_DATABASE_URL",
+        description="Postgres DSN (env: JARVIS_DATABASE_URL)",
+    )
+    redis_url: str = Field(default="", description="Redis URL (env: REDIS_URL)")
+
     def is_oauth_configured(self) -> bool:
         """Check if GitHub OAuth is properly configured."""
         return bool(

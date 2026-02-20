@@ -9,7 +9,7 @@ from autobots_devtools_shared_lib.common.observability import (
     TraceMetadata,
     get_logger,
     init_tracing,
-    set_conversation_id,
+    set_session_id,
 )
 from autobots_devtools_shared_lib.dynagent import ainvoke_agent, invoke_agent
 from dotenv import load_dotenv
@@ -58,7 +58,7 @@ def call_invoke_agent_sync(
 
     if not session_id:
         session_id = str(uuid.uuid4())
-    set_conversation_id(session_id)
+    set_session_id(session_id)
 
     logger.info(f"🔑 Generated session_id: {session_id}")
 
@@ -134,7 +134,7 @@ async def call_invoke_agent_async(
 
     if not session_id:
         session_id = str(uuid.uuid4())
-    set_conversation_id(session_id)
+    set_session_id(session_id)
 
     logger.info(f"🔑 Generated session_id: {session_id}")
 
