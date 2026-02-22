@@ -5,48 +5,98 @@ Jarvis is a demonstration app built on the [**Dynagent**](https://github.com/Pra
 > **Ready to build your own Jarvis-style use case?**
 > Follow the **[Scaffolding guide](docs/user-manuals/scaffolding.md)** — a step-by-step walkthrough to create your own multi-domain multi-agent application.
 
+### Multi Domain Multi Agent Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                                  Chainlit UI Layer                                   │
+│   localhost:2337 (Concierge)    localhost:1338 (Customer Support)  localhost:1339    │
+│                                                                         (Sales)       │
+└──────────────┬──────────────────────────────┬────────────────────────────┬───────────┘
+               │                              │                            │
+ ┌─────────────▼──────────────┐ ┌─────────────▼──────────────┐ ┌──────────▼────────────┐
+ │     CONCIERGE DOMAIN       │ │  CUSTOMER SUPPORT DOMAIN   │ │    SALES DOMAIN        │
+ │                            │ │                            │ │                        │
+ │  ┌──────────────────────┐  │ │  ┌──────────────────────┐  │ │  ┌──────────────────┐  │
+ │  │   welcome_agent ★    │  │ │  │ support_coordinator ★│  │ │  │ sales_coord. ★   │  │
+ │  │   (default)          │  │ │  │ (default)            │  │ │  │ (default)        │  │
+ │  └──────────┬───────────┘  │ │  └──────────┬───────────┘  │ │  └────────┬─────────┘  │
+ │         handoff            │ │          handoff            │ │        handoff         │
+ │      ┌────┴────┐           │ │      ┌────┴─────┐          │ │     ┌─────┴──────┐     │
+ │      ▼         ▼           │ │      ▼           ▼          │ │     ▼            ▼     │
+ │  ┌───────┐ ┌───────┐       │ │  ┌────────┐ ┌─────────┐    │ │  ┌────────┐ ┌────────┐ │
+ │  │ joke  │ │weather│       │ │  │ ticket │ │knowledge│    │ │  │  lead  │ │product │ │
+ │  │ agent │ │ agent │       │ │  │ agent  │ │  agent  │    │ │  │ qualif.│ │  rec.  │ │
+ │  │[batch]│ │       │       │ │  │[batch] │ │         │    │ │  │[batch] │ │        │ │
+ │  └───────┘ └───────┘       │ │  └────────┘ └─────────┘    │ │  └────────┘ └────────┘ │
+ │                            │ │                            │ │                        │
+ │  Tools:                    │ │  Tools:                    │ │  Tools:                │
+ │  · tell_joke               │ │  · create_ticket           │ │  · qualify_lead        │
+ │  · get_joke_categories     │ │  · update_ticket           │ │  · get_lead_score      │
+ │  · get_weather             │ │  · search_tickets          │ │  · get_product_catalog │
+ │  · get_forecast            │ │  · search_knowledge_base   │ │  · recommend_products  │
+ │                            │ │  · get_article             │ │  · check_inventory     │
+ │                            │ │  + shared validators       │ │                        │
+ └───────────────┬────────────┘ └───────────────┬────────────┘ └───────────┬────────────┘
+                 │                              │                           │
+ ┌───────────────▼──────────────────────────────▼───────────────────────────▼────────────┐
+ │                                    Common Layer                                        │
+ │              validate_email  ·  validate_phone  ·  validate_url                        │
+ │                         format_output  ·  context_store                               │
+ └───────────────────────────────────────────┬───────────────────────────────────────────┘
+                                             │
+ ┌───────────────────────────────────────────▼───────────────────────────────────────────┐
+ │                          Dynagent Framework  (autobots-devtools-shared-lib)            │
+ │                                                                                        │
+ │   LangGraph agents  ·  handoff tool  ·  batch_invoker  ·  stream_agent_events         │
+ │   agent config YAML  ·  tool registry  ·  Langfuse tracing  ·  Chainlit integration   │
+ └────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ★ = default (entry) agent    [batch] = batch_enabled: true
+```
+
 ### Essential features
 
-| Feature | Description |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Feature                             | Description                                                                                                                                    |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Multi-domain architecture** | Three domains (Concierge, Customer Support, Sales) run simultaneously on different ports. Clean separation of domain-specific and shared code. |
-| **Agent mesh** | Coordinator agents route to specialists. Handoff between agents within a domain. Default agent per domain for welcome/entry. |
-| **Structured outputs** | JSON schemas per agent for type-safe responses. Batch-enabled agents return consistent structures. |
-| **Shared + domain code** | `common/` for validation and utilities; `domains/{name}/` for server, tools, and services. Domains opt in to shared tools. |
-| **Batch processing** | Parallel prompt execution for qualified agents (`joke_agent`, `ticket_agent`, `lead_qualification_agent`) via `batch_invoker`. |
-| **Chainlit UI** | Interactive chat per domain. Streaming, tool steps, and structured output out of the box. |
-| **Observability** | Langfuse integration for tracing and monitoring. |
-| **Pythonic** | Pure Python and LangChain tools. Same IDE, pytest, and type hints you already use. |
+| **Agent mesh**                | Coordinator agents route to specialists. Handoff between agents within a domain. Default agent per domain for welcome/entry.                   |
+| **Structured outputs**        | JSON schemas per agent for type-safe responses. Batch-enabled agents return consistent structures.                                             |
+| **Shared + domain code**      | `common/` for validation and utilities; `domains/{name}/` for server, tools, and services. Domains opt in to shared tools.                 |
+| **Batch processing**          | Parallel prompt execution for qualified agents (`joke_agent`, `ticket_agent`, `lead_qualification_agent`) via `batch_invoker`.         |
+| **Chainlit UI**               | Interactive chat per domain. Streaming, tool steps, and structured output out of the box.                                                      |
+| **Observability**             | Langfuse integration for tracing and monitoring.                                                                                               |
+| **Pythonic**                  | Pure Python and LangChain tools. Same IDE, pytest, and type hints you already use.                                                             |
 
 ## Quickstart
 
-| Guide | Description |
-| ------ | ----------- |
-| **[Scaffolding](docs/user-manuals/scaffolding.md)** | Step-by-step guide to build your own Jarvis-style use case. |
-| **[Setup](#setup)** | Prerequisites, install, and environment configuration. |
-| **[Run domains](#running-domains)** | Run all domains at once or individually. Open Concierge, Customer Support, or Sales in the browser. |
+| Guide                                                  | Description                                                                                         |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| **[Scaffolding](docs/user-manuals/scaffolding.md)** | Step-by-step guide to build your own Jarvis-style use case.                                         |
+| **[Setup](#setup)**                                 | Prerequisites, install, and environment configuration.                                              |
+| **[Run domains](#running-domains)**                 | Run all domains at once or individually. Open Concierge, Customer Support, or Sales in the browser. |
 
 ## How-to guides
 
-| Guide | Description |
-| ------ | ----------- |
-| **[Setup](#setup)** | Python 3.12+, API keys, clone, install, `.env` configuration. |
-| **[Running domains](#running-domains)** | `make chainlit-all` or run Concierge (2337), Customer Support (1338), Sales (1339) separately. |
-| **[Domain descriptions](#domain-descriptions)** | What each domain does: agents, tools, mock data (Concierge, Customer Support, Sales). |
+| Guide                                                                   | Description                                                                                       |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **[Setup](#setup)**                                                  | Python 3.12+, API keys, clone, install,`.env` configuration.                                    |
+| **[Running domains](#running-domains)**                              | `make chainlit-all` or run Concierge (2337), Customer Support (1338), Sales (1339) separately.  |
+| **[Domain descriptions](#domain-descriptions)**                      | What each domain does: agents, tools, mock data (Concierge, Customer Support, Sales).             |
 | **[Shared vs domain code](#shared-vs-domain-specific-code-pattern)** | When to use `common/` vs `domains/{name}/`. Registration pattern for shared and domain tools. |
-| **[Batch processing](#batch-processing)** | Use `batch_invoker` or domain batch helpers for joke, ticket, and lead agents. |
-| **[Configuration](#configuration)** | Agent YAML, prompts, schemas; environment variables (e.g. `DYNAGENT_CONFIG_ROOT_DIR`, API keys). |
-| **[Extending Jarvis](#extending-jarvis)** | Add a new agent or tool; where to define config, prompts, and code. |
+| **[Batch processing](#batch-processing)**                            | Use `batch_invoker` or domain batch helpers for joke, ticket, and lead agents.                  |
+| **[Configuration](#configuration)**                                  | Agent YAML, prompts, schemas; environment variables (e.g.`DYNAGENT_CONFIG_ROOT_DIR`, API keys). |
+| **[Extending Jarvis](#extending-jarvis)**                            | Add a new agent or tool; where to define config, prompts, and code.                               |
 
 ## Advanced
 
-| Topic | Description |
-| ------ | ----------- |
-| **[Architecture](#architecture)** | Multi-domain structure, domain pattern, agent mesh diagram. |
-| **[Project structure](#project-structure)** | Full directory tree: `common/`, `domains/`, `agent_configs/`, tests, sbin. |
-| **[Docker](#docker-support)** | Build, run, and docker-compose targets. |
-| **[Troubleshooting](#troubleshooting)** | Import errors, agent not found, missing API key. |
-| **[Domain summary table](#domain-summary)** | Ports, default agents, batch agents, and quick access URLs. |
+| Topic                                          | Description                                                                     |
+| ---------------------------------------------- | ------------------------------------------------------------------------------- |
+| **[Architecture](#architecture)**           | Multi-domain structure, domain pattern, agent mesh diagram.                     |
+| **[Project structure](#project-structure)** | Full directory tree:`common/`, `domains/`, `agent_configs/`, tests, sbin. |
+| **[Docker](#docker-support)**               | Build, run, and docker-compose targets.                                         |
+| **[Troubleshooting](#troubleshooting)**     | Import errors, agent not found, missing API key.                                |
+| **[Domain summary table](#domain-summary)** | Ports, default agents, batch agents, and quick access URLs.                     |
 
 ---
 
@@ -59,7 +109,6 @@ Jarvis is a demonstration app built on the [**Dynagent**](https://github.com/Pra
    ```bash
    make install-dev   # installs into shared .venv
    ```
-
 2. **Configure environment:**
 
    ```bash
@@ -315,11 +364,11 @@ make docker-up   # docker-compose
 
 ## Domain summary
 
-| Domain | Port | Default agent | Batch agent | Highlights |
-|--------|------|---------------|-------------|------------|
-| Concierge | 2337 | welcome_agent | joke_agent | Jokes (4 categories), Weather (6 cities) |
-| Customer Support | 1338 | support_coordinator | ticket_agent | Tickets, KB (4 articles), shared validators |
-| Sales | 1339 | sales_coordinator | lead_qualification_agent | Lead scoring, catalog (6 products, 3 tiers) |
+| Domain           | Port | Default agent       | Batch agent              | Highlights                                  |
+| ---------------- | ---- | ------------------- | ------------------------ | ------------------------------------------- |
+| Concierge        | 2337 | welcome_agent       | joke_agent               | Jokes (4 categories), Weather (6 cities)    |
+| Customer Support | 1338 | support_coordinator | ticket_agent             | Tickets, KB (4 articles), shared validators |
+| Sales            | 1339 | sales_coordinator   | lead_qualification_agent | Lead scoring, catalog (6 products, 3 tiers) |
 
 **Quick URLs (when running `make chainlit-all`):**
 http://localhost:2337 · http://localhost:1338 · http://localhost:1339
