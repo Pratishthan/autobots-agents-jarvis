@@ -20,4 +20,4 @@ echo "Starting Customer Support on http://localhost:$PORT"
 echo "Config directory: $DYNAGENT_CONFIG_ROOT_DIR"
 
 # Run Chainlit
-chainlit run src/autobots_agents_jarvis/domains/customer_support/server.py --port "$PORT" --host 127.0.0.1
+chainlit run src/autobots_agents_jarvis/domains/customer_support/server.py --port "$PORT" --host 0.0.0.0

@@ -1,4 +1,4 @@
-.PHONY: help install install-dev install-hooks test test-cov test-fast test-one lint format check-format type-check clean all-checks build publish update-deps chainlit-dev chainlit-customer-support chainlit-sales chainlit-all sanity file-server docker-build docker-build-no-cache docker-run docker-run-detached docker-up docker-down docker-logs docker-logs-compose docker-shell docker-stop docker-ps docker-restart docker-clean docker-remove docker-tag docker-push docker-pull docker-deploy docker-size
+.PHONY: help install install-dev install-hooks test test-cov test-fast test-one lint format check-format type-check clean all-checks build publish update-deps chainlit-dev chainlit-customer-support chainlit-sales chainlit-all sanity file-server docker-build docker-build-no-cache docker-build-monorepo docker-build-monorepo-no-cache docker-run docker-run-detached docker-up docker-up-monorepo docker-deploy-monorepo docker-down docker-logs docker-logs-compose docker-shell docker-stop docker-ps docker-restart docker-clean docker-remove docker-tag docker-push docker-pull docker-deploy docker-size
 
 # Default target
 help:
@@ -28,6 +28,10 @@ help:
 	@echo "Docker commands:"
 	@echo "  make docker-build     - Build Docker image"
 	@echo "  make docker-build-no-cache - Build Docker image without cache"
+	@echo "  make docker-build-monorepo - Build using monorepo context (local path dep)"
+	@echo "  make docker-build-monorepo-no-cache - Same, without cache"
+	@echo "  make docker-up-monorepo   - Start services using monorepo compose file"
+	@echo "  make docker-deploy-monorepo - Build and start using monorepo compose file"
 	@echo "  make docker-run       - Run container interactively"
 	@echo "  make docker-run-detached - Run container in background"
 	@echo "  make docker-up        - Start services with docker-compose"
@@ -198,6 +202,14 @@ docker-build:
 docker-build-no-cache:
 	docker build --no-cache -t $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG) .
 
+# Build Docker image using monorepo context (resolves local path dep on autobots-devtools-shared-lib)
+docker-build-monorepo:
+	docker build -f Dockerfile.monorepo -t $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG) ..
+
+# Build Docker image using monorepo context without cache
+docker-build-monorepo-no-cache:
+	docker build --no-cache -f Dockerfile.monorepo -t $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG) ..
+
 # Run container interactively (removes after exit)
 docker-run:
 	docker run --rm --name $(DOCKER_CONTAINER_NAME) -p $(CHAINLIT_PORT):$(CHAINLIT_PORT) $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)
@@ -210,6 +222,16 @@ docker-run-detached:
 docker-up:
 	docker rm -f $(DOCKER_CONTAINER_NAME) 2>/dev/null || true
 	docker-compose up -d
+
+# Start services with docker-compose using monorepo context (resolves local path dep)
+docker-up-monorepo:
+	docker rm -f $(DOCKER_CONTAINER_NAME) 2>/dev/null || true
+	docker compose -f docker-compose.monorepo.yml up -d
+
+# Deploy (build + start) using monorepo context
+docker-deploy-monorepo:
+	docker rm -f $(DOCKER_CONTAINER_NAME) 2>/dev/null || true
+	docker compose -f docker-compose.monorepo.yml up -d --build
 
 # Stop services with docker-compose
 docker-down:

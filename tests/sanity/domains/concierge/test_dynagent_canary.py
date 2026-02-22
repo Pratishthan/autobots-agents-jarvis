@@ -22,7 +22,7 @@ from tests.conftest import requires_google_api
 # Pytest marker for sanity tests
 pytestmark = [pytest.mark.sanity, requires_google_api]
 
-CHAINLIT_PORT = 2338
+CHAINLIT_PORT = 12338
 HEADLESS = True
 
 

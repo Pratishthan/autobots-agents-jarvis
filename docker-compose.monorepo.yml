@@ -1,5 +1,11 @@
-# ABOUTME: Docker Compose configuration for local development.
-# ABOUTME: Includes three domain services (concierge, customer-support, sales) with optional Langfuse V3 for observability.
+# ABOUTME: Docker Compose configuration for monorepo local development builds.
+# ABOUTME: Uses Dockerfile.monorepo with build context at the monorepo root (..)
+# ABOUTME: so that the local path dependency on autobots-devtools-shared-lib resolves correctly.
+#
+# Usage (from autobots-agents-jarvis/):
+#   docker compose -f docker-compose.monorepo.yml up -d
+#   docker compose -f docker-compose.monorepo.yml up -d --build
+#   make docker-up-monorepo
 
 # Common environment variables shared across all domain services
 x-common-env: &common-env
@@ -21,8 +27,8 @@ x-common-env: &common-env
 services:
   concierge-chat:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: autobots-agents-jarvis/Dockerfile.monorepo
       args:
         DOMAIN: concierge
     ports:
@@ -43,8 +49,8 @@ services:
 
   customer-support-chat:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: autobots-agents-jarvis/Dockerfile.monorepo
       args:
         DOMAIN: customer_support
     ports:
@@ -65,8 +71,8 @@ services:
 
   sales-chat:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: autobots-agents-jarvis/Dockerfile.monorepo
       args:
         DOMAIN: sales
     ports:
