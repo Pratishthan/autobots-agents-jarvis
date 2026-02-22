@@ -7,53 +7,64 @@ Jarvis is a demonstration app built on the [**Dynagent**](https://github.com/Pra
 
 ### Multi Domain Multi Agent Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                                  Chainlit UI Layer                                   │
-│   localhost:2337 (Concierge)    localhost:1338 (Customer Support)  localhost:1339    │
-│                                                                         (Sales)       │
-└──────────────┬──────────────────────────────┬────────────────────────────┬───────────┘
-               │                              │                            │
- ┌─────────────▼──────────────┐ ┌─────────────▼──────────────┐ ┌──────────▼────────────┐
- │     CONCIERGE DOMAIN       │ │  CUSTOMER SUPPORT DOMAIN   │ │    SALES DOMAIN        │
- │                            │ │                            │ │                        │
- │  ┌──────────────────────┐  │ │  ┌──────────────────────┐  │ │  ┌──────────────────┐  │
- │  │   welcome_agent ★    │  │ │  │ support_coordinator ★│  │ │  │ sales_coord. ★   │  │
- │  │   (default)          │  │ │  │ (default)            │  │ │  │ (default)        │  │
- │  └──────────┬───────────┘  │ │  └──────────┬───────────┘  │ │  └────────┬─────────┘  │
- │         handoff            │ │          handoff            │ │        handoff         │
- │      ┌────┴────┐           │ │      ┌────┴─────┐          │ │     ┌─────┴──────┐     │
- │      ▼         ▼           │ │      ▼           ▼          │ │     ▼            ▼     │
- │  ┌───────┐ ┌───────┐       │ │  ┌────────┐ ┌─────────┐    │ │  ┌────────┐ ┌────────┐ │
- │  │ joke  │ │weather│       │ │  │ ticket │ │knowledge│    │ │  │  lead  │ │product │ │
- │  │ agent │ │ agent │       │ │  │ agent  │ │  agent  │    │ │  │ qualif.│ │  rec.  │ │
- │  │[batch]│ │       │       │ │  │[batch] │ │         │    │ │  │[batch] │ │        │ │
- │  └───────┘ └───────┘       │ │  └────────┘ └─────────┘    │ │  └────────┘ └────────┘ │
- │                            │ │                            │ │                        │
- │  Tools:                    │ │  Tools:                    │ │  Tools:                │
- │  · tell_joke               │ │  · create_ticket           │ │  · qualify_lead        │
- │  · get_joke_categories     │ │  · update_ticket           │ │  · get_lead_score      │
- │  · get_weather             │ │  · search_tickets          │ │  · get_product_catalog │
- │  · get_forecast            │ │  · search_knowledge_base   │ │  · recommend_products  │
- │                            │ │  · get_article             │ │  · check_inventory     │
- │                            │ │  + shared validators       │ │                        │
- └───────────────┬────────────┘ └───────────────┬────────────┘ └───────────┬────────────┘
-                 │                              │                           │
- ┌───────────────▼──────────────────────────────▼───────────────────────────▼────────────┐
- │                                    Common Layer                                        │
- │              validate_email  ·  validate_phone  ·  validate_url                        │
- │                         format_output  ·  context_store                               │
- └───────────────────────────────────────────┬───────────────────────────────────────────┘
-                                             │
- ┌───────────────────────────────────────────▼───────────────────────────────────────────┐
- │                          Dynagent Framework  (autobots-devtools-shared-lib)            │
- │                                                                                        │
- │   LangGraph agents  ·  handoff tool  ·  batch_invoker  ·  stream_agent_events         │
- │   agent config YAML  ·  tool registry  ·  Langfuse tracing  ·  Chainlit integration   │
- └────────────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph UI["Chainlit UI Layer"]
+        direction LR
+        c_ui["Concierge\nlocalhost:2337"]
+        cs_ui["Customer Support\nlocalhost:1338"]
+        s_ui["Sales\nlocalhost:1339"]
+    end
 
-  ★ = default (entry) agent    [batch] = batch_enabled: true
+    subgraph concierge["Concierge Domain"]
+        direction TB
+        wa["★ welcome_agent\n(default)"]
+        ja["joke_agent\n〔batch〕"]
+        wea["weather_agent"]
+        wa -->|handoff| ja
+        wa -->|handoff| wea
+    end
+
+    subgraph cust_support["Customer Support Domain"]
+        direction TB
+        sc["★ support_coordinator\n(default)"]
+        ta["ticket_agent\n〔batch〕"]
+        ka["knowledge_agent"]
+        sc -->|handoff| ta
+        sc -->|handoff| ka
+    end
+
+    subgraph sales["Sales Domain"]
+        direction TB
+        sac["★ sales_coordinator\n(default)"]
+        la["lead_qualification_agent\n〔batch〕"]
+        pa["product_recommendation_agent"]
+        sac -->|handoff| la
+        sac -->|handoff| pa
+    end
+
+    c_ui --> wa
+    cs_ui --> sc
+    s_ui --> sac
+
+    subgraph common["Common Layer"]
+        direction LR
+        validators["validate_email · validate_phone · validate_url"]
+        utils["format_output · context_store"]
+    end
+
+    concierge --> common
+    cust_support --> common
+    sales --> common
+
+    subgraph dynagent["Dynagent Framework · autobots-devtools-shared-lib"]
+        direction LR
+        core["LangGraph agents · handoff · batch_invoker · stream_agent_events · Langfuse · tool registry"]
+    end
+
+    common --> dynagent
 ```
+> ★ = default (entry) agent &nbsp;&nbsp; 〔batch〕 = `batch_enabled: true`
 
 ### Essential features
 
