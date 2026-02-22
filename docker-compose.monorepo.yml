@@ -12,6 +12,7 @@ x-common-env: &common-env
   LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
   LLM_MODEL: ${LLM_MODEL:-gemini-2.0-flash}
   GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+  ANTHROPIC_BASE_URL: ${ANTHROPIC_BASE_URL:-https://api.anthropic.com}
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
   LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
   LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
@@ -31,8 +32,9 @@ services:
       dockerfile: autobots-agents-jarvis/Dockerfile.monorepo
       args:
         DOMAIN: concierge
+        PORT: 1337
     ports:
-      - "2337:2337"
+      - "1337:1337"
     environment:
       <<: *common-env
       DYNAGENT_CONFIG_ROOT_DIR: /app/agent_configs/concierge
@@ -53,6 +55,7 @@ services:
       dockerfile: autobots-agents-jarvis/Dockerfile.monorepo
       args:
         DOMAIN: customer_support
+        PORT: 1338
     ports:
       - "1338:1338"
     environment:
@@ -75,6 +78,7 @@ services:
       dockerfile: autobots-agents-jarvis/Dockerfile.monorepo
       args:
         DOMAIN: sales
+        PORT: 1339
     ports:
       - "1339:1339"
     environment:
