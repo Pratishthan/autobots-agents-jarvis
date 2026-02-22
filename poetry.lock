@@ -357,7 +357,7 @@ files = [
 
 [[package]]
 name = "autobots-devtools-shared-lib"
-version = "0.1.7"
+version = "0.1.8"
 description = "Shared library functions to be used for all autobots projects"
 optional = false
 python-versions = ">=3.12,<4.0.0"
@@ -6214,4 +6214,4 @@ dev = ["fakeredis", "playwright", "pre-commit", "pyright", "pytest", "pytest-asy
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0.0"
-content-hash = "924eab1c937bae35eb75bcfee148289fc75b72fb8724aa1a760876d2a68b78d3"
+content-hash = "a081c7821f38315d416f0cf9e5b487bdf35d895eb7610cc7510be8f110e28d6a"
