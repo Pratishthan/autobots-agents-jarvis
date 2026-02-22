@@ -1,6 +1,6 @@
 # Jarvis — Multi-Domain Multi-Agent AI Application
 
-Jarvis is a demonstration app built on the **Dynagent** framework (`autobots-devtools-shared-lib`). It shows how to run **multiple business domains** as separate multi-agent systems—each with its own Chainlit UI, agents, and tools—while sharing common code. You get production-style patterns: domain isolation, agent handoff, structured outputs, and batch processing, with minimal configuration.
+Jarvis is a demonstration app built on the [**Dynagent**](https://github.com/Pratishthan/autobots-devtools-shared-lib) framework. It shows how to run **multiple business domains** as separate multi-agent systems—each with its own Chainlit UI, agents, and tools—while sharing common code. You get production-style patterns: domain isolation, agent handoff, structured outputs, and batch processing, with minimal configuration.
 
 > **Ready to build your own Jarvis-style use case?**
 > Follow the **[Scaffolding guide](docs/user-manuals/scaffolding.md)** — a step-by-step walkthrough to create your own multi-domain multi-agent application.
