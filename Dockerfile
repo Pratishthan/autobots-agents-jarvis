@@ -1,8 +1,8 @@
-# Dockerfile for autobots_agents_pay
+# Dockerfile for autobots_agents_jarvis
 # Multi-stage build with Poetry
-# Build context: autobots_agents_pay directory
+# Build context: autobots_agents_jarvis directory
 # Usage:
-#   docker build --build-arg DOMAIN=concierge --build-arg PORT=2337 -t myapp:concierge .
+#   docker build --build-arg DOMAIN=concierge --build-arg PORT=1337 -t myapp:concierge .
 # Or: make docker-build
 
 # Stage 1: Builder - Install dependencies with Poetry

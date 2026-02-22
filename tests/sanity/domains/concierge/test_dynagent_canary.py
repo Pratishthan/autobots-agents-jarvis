@@ -102,7 +102,7 @@ def test_get_schema(concierge_registered):
 # ---------------------------------------------------------------------------
 
 
-def _start_chainlit_no_auth(concierge_dir: Path, port: int = 2337) -> subprocess.Popen:
+def _start_chainlit_no_auth(concierge_dir: Path, port: int = 1337) -> subprocess.Popen:
     """Start Chainlit with OAuth disabled for sanity test."""
     env = os.environ.copy()
     env["OAUTH_GITHUB_CLIENT_ID"] = ""

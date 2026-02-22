@@ -11,7 +11,7 @@ Jarvis is a demonstration app built on the [**Dynagent**](https://github.com/Pra
 flowchart TD
     subgraph UI["Chainlit UI Layer"]
         direction LR
-        c_ui["Concierge\nlocalhost:2337"]
+        c_ui["Concierge\nlocalhost:1337"]
         cs_ui["Customer Support\nlocalhost:1338"]
         s_ui["Sales\nlocalhost:1339"]
     end
@@ -92,7 +92,7 @@ flowchart TD
 | Guide                                                                   | Description                                                                                       |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | **[Setup](#setup)**                                                  | Python 3.12+, API keys, clone, install,`.env` configuration.                                    |
-| **[Running domains](#running-domains)**                              | `make chainlit-all` or run Concierge (2337), Customer Support (1338), Sales (1339) separately.  |
+| **[Running domains](#running-domains)**                              | `make chainlit-all` or run Concierge (1337), Customer Support (1338), Sales (1339) separately.  |
 | **[Domain descriptions](#domain-descriptions)**                      | What each domain does: agents, tools, mock data (Concierge, Customer Support, Sales).             |
 | **[Shared vs domain code](#shared-vs-domain-specific-code-pattern)** | When to use `common/` vs `domains/{name}/`. Registration pattern for shared and domain tools. |
 | **[Batch processing](#batch-processing)**                            | Use `batch_invoker` or domain batch helpers for joke, ticket, and lead agents.                  |
@@ -139,7 +139,7 @@ make chainlit-all
 
 Then open:
 
-- **Concierge:** http://localhost:2337
+- **Concierge:** http://localhost:1337
 - **Customer Support:** http://localhost:1338
 - **Sales:** http://localhost:1339
 
@@ -148,7 +148,7 @@ Use `Ctrl+C` to stop.
 ### Run one domain
 
 ```bash
-make chainlit-dev                 # Concierge (2337)
+make chainlit-dev                 # Concierge (1337)
 make chainlit-customer-support    # Customer Support (1338)
 make chainlit-sales               # Sales (1339)
 
@@ -191,7 +191,7 @@ domains/{name}/
 ### Agent mesh
 
 ```
-Concierge (2337)              Customer Support (1338)     Sales (1339)
+Concierge (1337)              Customer Support (1338)     Sales (1339)
 ┌─────────────────┐           ┌─────────────────┐          ┌─────────────────┐
 │ Welcome (default)│          │ Coordinator     │          │ Coordinator     │
 └────────┬────────┘           └────────┬────────┘         └────────┬────────┘
@@ -203,7 +203,7 @@ Concierge (2337)              Customer Support (1338)     Sales (1339)
 
 ## Domain descriptions
 
-### Concierge (port 2337)
+### Concierge (port 1337)
 
 **Purpose:** General assistant (jokes, weather).
 **Agents:** `welcome_agent` (default), `joke_agent` (batch), `weather_agent`.
@@ -377,12 +377,12 @@ make docker-up   # docker-compose
 
 | Domain           | Port | Default agent       | Batch agent              | Highlights                                  |
 | ---------------- | ---- | ------------------- | ------------------------ | ------------------------------------------- |
-| Concierge        | 2337 | welcome_agent       | joke_agent               | Jokes (4 categories), Weather (6 cities)    |
+| Concierge        | 1337 | welcome_agent       | joke_agent               | Jokes (4 categories), Weather (6 cities)    |
 | Customer Support | 1338 | support_coordinator | ticket_agent             | Tickets, KB (4 articles), shared validators |
 | Sales            | 1339 | sales_coordinator   | lead_qualification_agent | Lead scoring, catalog (6 products, 3 tiers) |
 
 **Quick URLs (when running `make chainlit-all`):**
-http://localhost:2337 · http://localhost:1338 · http://localhost:1339
+http://localhost:1337 · http://localhost:1338 · http://localhost:1339
 
 ## License
 

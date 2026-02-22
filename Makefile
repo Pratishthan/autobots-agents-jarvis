@@ -20,7 +20,7 @@ help:
 	@echo "  make build            - Build the package"
 	@echo "  make publish          - Publish package to PyPI"
 	@echo "  make update-deps      - Update dependencies"
-	@echo "  make chainlit-dev     - Run Concierge Chainlit UI (port 2337)"
+	@echo "  make chainlit-dev     - Run Concierge Chainlit UI (port 1337)"
 	@echo "  make chainlit-customer-support - Run Customer Support UI (port 1338)"
 	@echo "  make chainlit-sales   - Run Sales UI (port 1339)"
 	@echo "  make chainlit-all     - Run all domains simultaneously"
@@ -68,7 +68,7 @@ DOCKER_REGISTRY = # Set this to your registry (e.g., docker.io/username)
 DOCKER_CONTAINER_NAME = autobots-agents-jarvis
 
 # Chainlit configuration
-CHAINLIT_PORT = 2337
+CHAINLIT_PORT = 1337
 CHAINLIT_APP = src/autobots_agents_jarvis/domains/concierge/server.py
 CHAINLIT_CUSTOMER_SUPPORT_PORT = 1338
 CHAINLIT_CUSTOMER_SUPPORT_APP = src/autobots_agents_jarvis/domains/customer_support/server.py
