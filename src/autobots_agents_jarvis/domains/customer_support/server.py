@@ -16,9 +16,11 @@ from autobots_devtools_shared_lib.dynagent import create_base_agent
 from autobots_devtools_shared_lib.dynagent.ui import stream_agent_events
 from dotenv import load_dotenv
 
+from autobots_agents_jarvis.common.configs.settings import init_app_settings
+from autobots_agents_jarvis.common.models.state import JarvisState
 from autobots_agents_jarvis.common.tools.validation_tools import register_validation_tools
+from autobots_agents_jarvis.common.utils.context_utils import init_context_key_resolver
 from autobots_agents_jarvis.common.utils.formatting import format_structured_output
-from autobots_agents_jarvis.configs.settings import init_app_settings
 from autobots_agents_jarvis.domains.customer_support.tools import register_customer_support_tools
 
 if TYPE_CHECKING:
@@ -94,7 +96,9 @@ async def start():
     """Initialize the chat session with the default customer support coordinator agent."""
     # Create agent instance once and store it in session
     init_tracing()
-    base_agent = create_base_agent()
+    # Resolve context key from user_name so context store lookups use the current user.
+    init_context_key_resolver()
+    base_agent = create_base_agent(state_schema=JarvisState)
     cl.user_session.set("base_agent", base_agent)
 
     # Prepare trace metadata for Langfuse observability (session-level)

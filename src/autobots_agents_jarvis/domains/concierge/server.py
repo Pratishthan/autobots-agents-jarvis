@@ -16,7 +16,9 @@ from autobots_devtools_shared_lib.dynagent import create_base_agent
 from autobots_devtools_shared_lib.dynagent.ui import stream_agent_events
 from dotenv import load_dotenv
 
+from autobots_agents_jarvis.common.models.state import JarvisState
 from autobots_agents_jarvis.common.services.context_setup import init_context_store
+from autobots_agents_jarvis.common.utils.context_utils import init_context_key_resolver
 from autobots_agents_jarvis.common.utils.formatting import format_structured_output
 from autobots_agents_jarvis.domains.concierge.settings import init_concierge_settings
 from autobots_agents_jarvis.domains.concierge.tools import register_concierge_tools
@@ -96,7 +98,9 @@ async def start():
     """Initialize the chat session with the welcome agent."""
     # Create agent instance once and store it in session
     init_tracing()
-    base_agent = create_base_agent()
+    # Resolve context key from user_name so store lookups use the current user.
+    init_context_key_resolver()
+    base_agent = create_base_agent(state_schema=JarvisState)
     cl.user_session.set("base_agent", base_agent)
 
     # Prepare trace metadata for Langfuse observability (session-level)
@@ -134,11 +138,12 @@ async def on_message(message: cl.Message):
         await cl.Message(content="Error: Session initialization failed. Please refresh.").send()
         return
 
-    user_id = cl.user_session.get("user_id")
+    # Session user for context key and stored user_name (from state.user_name only, not user_id).
+    session_user_name = cl.user_session.get("user_id")
 
     input_state: dict[str, Any] = {
         "messages": [{"role": "user", "content": message.content}],
-        "user_id": user_id,
+        "user_name": session_user_name,
         "app_name": APP_NAME,
         "session_id": cl.context.session.thread_id,
     }
@@ -154,6 +159,11 @@ async def on_message(message: cl.Message):
         enable_tracing=True,
         trace_metadata=trace_metadata,
     )
+    # Re-assert user_name from session so it is not overwritten by tool payloads (e.g. names from messages).
+    if session_user_name:
+        from autobots_devtools_shared_lib.common.utils.context_utils import update_context
+
+        update_context(session_user_name, {"user_name": session_user_name})
     logger.debug(f"Agent execution completed with result: {result}")
 
 

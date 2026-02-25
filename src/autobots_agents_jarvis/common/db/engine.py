@@ -6,7 +6,7 @@ from __future__ import annotations
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from autobots_agents_jarvis.db.models import Base
+from autobots_agents_jarvis.common.db.models import Base
 
 _SESSION_FACTORY: sessionmaker[Session] | None = None
 

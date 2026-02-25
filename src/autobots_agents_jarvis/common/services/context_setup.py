@@ -10,9 +10,9 @@ from autobots_devtools_shared_lib.common.services import (
     set_context_store,
 )
 
-from autobots_agents_jarvis.configs.settings import get_app_settings
-from autobots_agents_jarvis.db.engine import init_db_engine
-from autobots_agents_jarvis.db.repository import JarvisContextRepository
+from autobots_agents_jarvis.common.configs.settings import get_app_settings
+from autobots_agents_jarvis.common.db.engine import init_db_engine
+from autobots_agents_jarvis.common.db.repository import JarvisContextRepository
 
 logger = get_logger(__name__)
 
@@ -30,7 +30,7 @@ def init_context_store() -> None:
     settings = get_app_settings()
 
     session_factory = init_db_engine(settings.database_url)
-    repo = JarvisContextRepository(session_factory)
+    repo = JarvisContextRepository(session_factory, prefix="jarvis_ctx")
 
     if settings.redis_url:
         from autobots_devtools_shared_lib.common.services.context import (

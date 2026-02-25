@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from autobots_agents_jarvis.configs.settings import AppSettings
+from autobots_agents_jarvis.common.configs.settings import AppSettings
 
 _CONCIERGE_CONFIG_CANDIDATES = [
     Path("agent_configs/concierge"),

@@ -3,7 +3,7 @@
 
 from pydantic import Field
 
-from autobots_agents_jarvis.configs.settings import AppSettings, init_app_settings
+from autobots_agents_jarvis.common.configs.settings import AppSettings, init_app_settings
 
 
 class ConciergeSettings(AppSettings):
