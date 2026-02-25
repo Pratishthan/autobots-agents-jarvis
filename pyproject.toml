@@ -9,14 +9,10 @@ authors = [
 license = "MIT"
 requires-python = ">=3.12,<4.0.0"
 dependencies = [
-    "autobots-devtools-shared-lib>=0.1.4",
-    "chainlit>=2.9.6",
-    "langchain>=1.0.0",
-    "langchain-google-genai>=4.2.0",
-    "langfuse>=3.12.1",
-    "pydantic-settings>=2.10.1",
-    "python-dotenv>=1.1.1",
-    "pyyaml>=6.0.3",
+    "autobots-devtools-shared-lib>=0.2.1",
+    "sqlalchemy>=2.0",
+    "psycopg2-binary>=2.9",
+    "redis>=5.0",
 ]
 
 [project.optional-dependencies]
