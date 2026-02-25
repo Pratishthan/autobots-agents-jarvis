@@ -69,7 +69,7 @@ python3 sbin/scaffold.py kbe-pay --primary-domain nurture
 # With display name and description
 python3 sbin/scaffold.py kbe-pay --display-name "KBE Pay" --description "Payment agent for KBE"
 
-# Custom port (default is 2337)
+# Custom port (default is 1337)
 python3 sbin/scaffold.py kbe-pay --port 8080
 
 # See what would be done without changing anything
@@ -84,7 +84,7 @@ python3 sbin/scaffold.py kbe-pay --dry-run
 | `--primary-domain` | Primary domain name (e.g. `nurture`). Defaults to the project name. This is the domain that replaces “concierge” in code and paths. |
 | `--display-name` | Human-readable name (e.g. `KBE Pay`). Defaults to a capitalized version of the project name. |
 | `--description` | Short description written into `pyproject.toml`. |
-| `--port` | Default Chainlit port (default: `2337`). |
+| `--port` | Default Chainlit port (default: `1337`). |
 | `--dry-run` | Print planned renames and edits only; do not modify files or delete the script. |
 
 ### What the script does

@@ -11,8 +11,8 @@ from autobots_devtools_shared_lib.common.services import (
 )
 
 from autobots_agents_jarvis.common.configs.settings import get_app_settings
-from autobots_agents_jarvis.common.db.engine import init_db_engine
-from autobots_agents_jarvis.common.db.repository import JarvisContextRepository
+from autobots_agents_jarvis.db.engine import init_db_engine
+from autobots_agents_jarvis.db.repository import JarvisContextRepository
 
 logger = get_logger(__name__)
 
@@ -25,12 +25,12 @@ def init_context_store() -> None:
     - REDIS_URL is optional; falls back to InMemoryContextStore for the cache
       layer (suitable for local development without Redis).
 
-    Call once at server startup, after load_dotenv() / init_app_settings().
+    Call once at server startup, after load_dotenv() / init_concierge_settings() (or other domain init).
     """
     settings = get_app_settings()
 
     session_factory = init_db_engine(settings.database_url)
-    repo = JarvisContextRepository(session_factory, prefix="jarvis_ctx")
+    repo = JarvisContextRepository(session_factory)
 
     if settings.redis_url:
         from autobots_devtools_shared_lib.common.services.context import (
@@ -38,9 +38,7 @@ def init_context_store() -> None:
             _RedisConfig,
         )
 
-        cache: InMemoryContextStore | RedisContextStore = RedisContextStore(
-            _RedisConfig(url=settings.redis_url, prefix="jarvis_ctx")
-        )
+        cache = RedisContextStore(_RedisConfig(url=settings.redis_url, prefix="jarvis_ctx"))
         logger.info("Context store: CacheBackedContextStore (Postgres + Redis)")
     else:
         cache = InMemoryContextStore()

@@ -1,9 +1,12 @@
-# Dockerfile for autobots_agents_jarvis
-# Multi-stage build with Poetry
-# Build context: autobots_agents_jarvis directory
-# Usage:
-#   docker build --build-arg DOMAIN=concierge --build-arg PORT=1337 -t myapp:concierge .
-# Or: make docker-build
+# Dockerfile.monorepo for autobots-agents-jarvis
+# Multi-stage build with Poetry — for monorepo local development builds.
+#
+# Build context must be the MONOREPO ROOT (ws-autobots/) so that the local
+# path dependency on autobots-devtools-shared-lib resolves correctly.
+#
+# Usage (from autobots-agents-jarvis/):
+#   docker build -f Dockerfile.monorepo -t autobots-agents-jarvis:latest ..
+# Or: make docker-build-monorepo
 
 # Stage 1: Builder - Install dependencies with Poetry
 FROM python:3.12-slim-bookworm AS builder
@@ -21,8 +24,13 @@ RUN pip install --no-cache-dir poetry==${POETRY_VERSION}
 # Set working directory
 WORKDIR /app
 
+# Copy shared lib so Poetry can resolve the local path dependency:
+#   pyproject.toml: path = "../autobots-devtools-shared-lib"
+#   From WORKDIR /app, that resolves to /autobots-devtools-shared-lib
+COPY autobots-devtools-shared-lib /autobots-devtools-shared-lib
+
 # Copy dependency files first for better layer caching
-COPY pyproject.toml poetry.lock* ./
+COPY autobots-agents-jarvis/pyproject.toml autobots-agents-jarvis/poetry.lock* ./
 
 # Install dependencies (without dev dependencies, without root package)
 RUN poetry install --no-root --only main && \
@@ -58,13 +66,18 @@ WORKDIR /app
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
 
+# Copy shared lib source to the same path the editable install (.pth file) points to.
+# Poetry installs develop=true deps as editable, creating a .pth entry for
+# /autobots-devtools-shared-lib — that path must exist at runtime too.
+COPY --from=builder /autobots-devtools-shared-lib /autobots-devtools-shared-lib
+
 # Create directories for volume mounts with correct ownership
 RUN mkdir -p configs && \
     chown -R app:app configs
 
 # Copy application code (preserve src/ structure for PYTHONPATH)
-COPY src ./src
-COPY sbin ./sbin
+COPY autobots-agents-jarvis/src ./src
+COPY autobots-agents-jarvis/sbin ./sbin
 
 # Change ownership to non-root user
 RUN chown -R app:app /app

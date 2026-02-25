@@ -22,7 +22,7 @@ from tests.conftest import requires_google_api
 # Pytest marker for sanity tests
 pytestmark = [pytest.mark.sanity, requires_google_api]
 
-CHAINLIT_PORT = 2338
+CHAINLIT_PORT = 12338
 HEADLESS = True
 
 
@@ -102,7 +102,7 @@ def test_get_schema(concierge_registered):
 # ---------------------------------------------------------------------------
 
 
-def _start_chainlit_no_auth(concierge_dir: Path, port: int = 2337) -> subprocess.Popen:
+def _start_chainlit_no_auth(concierge_dir: Path, port: int = 1337) -> subprocess.Popen:
     """Start Chainlit with OAuth disabled for sanity test."""
     env = os.environ.copy()
     env["OAUTH_GITHUB_CLIENT_ID"] = ""
