@@ -7,8 +7,8 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from autobots_agents_jarvis.db.models import Base, JarvisContextEntity
-from autobots_agents_jarvis.db.repository import JarvisContextRepository
+from autobots_agents_jarvis.common.db.models import Base, JarvisContextEntity
+from autobots_agents_jarvis.common.db.repository import JarvisContextRepository
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -27,7 +27,14 @@ def session_factory():
 
 @pytest.fixture()
 def repo(session_factory):
+    """Repository with no prefix (default)."""
     return JarvisContextRepository(session_factory)
+
+
+@pytest.fixture()
+def repo_with_prefix(session_factory):
+    """Repository with prefix jarvis_ctx (matches CacheBackedContextStore usage)."""
+    return JarvisContextRepository(session_factory, prefix="jarvis_ctx")
 
 
 # ---------------------------------------------------------------------------
@@ -130,3 +137,43 @@ def test_delete_removes_existing_row(repo, session_factory):
 
 def test_delete_nonexistent_key_does_not_raise(repo):
     repo.delete("nonexistent")  # should not raise
+
+
+# ---------------------------------------------------------------------------
+# prefix (jarvis_ctx) — aligns with CacheBackedContextStore
+# ---------------------------------------------------------------------------
+
+
+def test_prefix_get_set_roundtrip(repo_with_prefix):
+    """With prefix, get/set use storage key prefix_context_key in the DB."""
+    repo_with_prefix.set("session_1", {"user_name": "alice", "repo_name": "r1"})
+    result = repo_with_prefix.get("session_1")
+    assert result == {"user_name": "alice", "repo_name": "r1"}
+
+
+def test_prefix_stores_under_prefixed_key(repo_with_prefix, session_factory):
+    """DB row uses prefixed context_key (jarvis_ctx_session_1)."""
+    repo_with_prefix.set("session_1", {"user_name": "bob"})
+    with session_factory() as session:
+        entity = session.get(JarvisContextEntity, "jarvis_ctx_session_1")
+        assert entity is not None
+        assert entity.context_key == "jarvis_ctx_session_1"
+        assert entity.user_name == "bob"
+
+
+def test_prefix_get_returns_none_for_unprefixed_key(repo_with_prefix, session_factory):
+    """Raw key in DB (no prefix) is not visible when repo uses prefix."""
+    with session_factory() as session:
+        entity = JarvisContextEntity(context_key="session_1", user_name="raw")
+        session.add(entity)
+        session.commit()
+    # Repo with prefix looks up jarvis_ctx_session_1, not session_1
+    assert repo_with_prefix.get("session_1") is None
+
+
+def test_prefix_delete_removes_prefixed_row(repo_with_prefix, session_factory):
+    repo_with_prefix.set("del_me", {"user_name": "x"})
+    repo_with_prefix.delete("del_me")
+    assert repo_with_prefix.get("del_me") is None
+    with session_factory() as session:
+        assert session.get(JarvisContextEntity, "jarvis_ctx_del_me") is None

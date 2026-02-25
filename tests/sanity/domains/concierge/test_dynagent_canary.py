@@ -109,6 +109,7 @@ def _start_chainlit_no_auth(concierge_dir: Path, port: int = 1337) -> subprocess
     env["OAUTH_GITHUB_CLIENT_SECRET"] = ""
     env["CHAINLIT_AUTH_SECRET"] = ""
     env["DYNAGENT_CONFIG_ROOT_DIR"] = str(concierge_dir / "agent_configs" / "concierge")
+    env["JARVIS_DATABASE_URL"] = env.get("JARVIS_DATABASE_URL", "sqlite:///:memory:")
     app_path = (
         concierge_dir / "src" / "autobots_agents_jarvis" / "domains" / "concierge" / "server.py"
     )
@@ -127,12 +128,12 @@ def _start_chainlit_no_auth(concierge_dir: Path, port: int = 1337) -> subprocess
         ],
         env=env,
         cwd=str(concierge_dir),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
 
 
-def _wait_for_chainlit(port: int, timeout: float = 30.0) -> bool:
+def _wait_for_chainlit(port: int, timeout: float = 45.0) -> bool:
     """Wait for Chainlit to be ready."""
     url = f"http://127.0.0.1:{port}"
     deadline = time.monotonic() + timeout
@@ -164,7 +165,9 @@ def test_ui_chat_script(concierge_registered):
     proc = _start_chainlit_no_auth(concierge_dir, port=CHAINLIT_PORT)
     try:
         if not _wait_for_chainlit(CHAINLIT_PORT):
-            pytest.fail("Chainlit did not become ready in time")
+            _out, err = proc.communicate(timeout=2)
+            err_msg = err.decode("utf-8", errors="replace") if err else ""
+            pytest.fail(f"Chainlit did not become ready in time. Stderr:\n{err_msg[:2000]}")
 
         with sync_playwright() as p:
             # Force Chromium headless - unset PWDEBUG so VS Code debug doesn't open headed browser

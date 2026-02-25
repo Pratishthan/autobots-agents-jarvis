@@ -6,10 +6,10 @@ readme = "README.md"
 authors = [
     {name = "PK", email = "pro.kamath@gmail.com"}
 ]
-license = {text = "MIT"}
+license = "MIT"
 requires-python = ">=3.12,<4.0.0"
 dependencies = [
-    "autobots-devtools-shared-lib>=0.1.7",
+    "autobots-devtools-shared-lib>=0.2.1",
     "sqlalchemy>=2.0",
     "psycopg2-binary>=2.9",
     "redis>=5.0",
@@ -29,17 +29,13 @@ dev = [
 ]
 
 [tool.poetry]
-name = "autobots-agents-jarvis"
-version = "0.1.0"
-description = "Jarvis - Multi-agent AI Assistant Demo"
-authors = ["PK <pro.kamath@gmail.com>"]
 packages = [
     { include = "autobots_agents_jarvis", from = "src" }
 ]
 
 [tool.poetry.dependencies]
 # Local path dependency (Poetry-specific)
-autobots-devtools-shared-lib = {path = "../autobots-devtools-shared-lib", develop = true}  # MONOREPO
+# autobots-devtools-shared-lib = {path = "../autobots-devtools-shared-lib", develop = true}  # MONOREPO
 
 
 [tool.ruff]
