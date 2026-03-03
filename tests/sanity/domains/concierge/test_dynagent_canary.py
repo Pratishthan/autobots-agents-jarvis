@@ -180,9 +180,11 @@ def test_ui_chat_script(concierge_registered):
             try:
                 page = browser.new_page()
                 page.set_default_timeout(45000)
-                page.goto(f"http://127.0.0.1:{CHAINLIT_PORT}", wait_until="networkidle")
+                # "networkidle" times out with Chainlit's persistent WebSocket/SSE; use "load".
+                page.goto(f"http://127.0.0.1:{CHAINLIT_PORT}", wait_until="load")
                 page.wait_for_load_state("domcontentloaded")
-                page.wait_for_timeout(2000)
+                # Wait for the chat input to be visible before interacting.
+                page.wait_for_selector('[role="textbox"], textarea', timeout=15000)
 
                 for item in messages:
                     user_msg = item.get("user", "")
@@ -197,7 +199,8 @@ def test_ui_chat_script(concierge_registered):
 
                     page.wait_for_timeout(5000)
                     if assert_contains:
-                        content = page.content().lower()
+                        # inner_text returns rendered text (apostrophes as literals, not HTML entities).
+                        content = page.inner_text("body").lower()
                         for substr in assert_contains:
                             assert substr.lower() in content, (
                                 f"Expected '{substr}' in response for message '{user_msg}'"

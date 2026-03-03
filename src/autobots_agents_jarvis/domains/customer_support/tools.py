@@ -5,6 +5,8 @@ from autobots_devtools_shared_lib.common.observability import get_logger, set_se
 from autobots_devtools_shared_lib.dynagent import Dynagent
 from langchain.tools import ToolRuntime, tool
 
+from autobots_agents_jarvis.common.db.models import JarvisContextData
+from autobots_agents_jarvis.common.models.state import JarvisState
 from autobots_agents_jarvis.domains.customer_support.services import (
     create_ticket as service_create_ticket,
 )
@@ -187,11 +189,12 @@ def get_article(runtime: ToolRuntime[None, Dynagent], article_id: str) -> str:
 
 
 def register_customer_support_tools() -> None:
-    """Register all 5 Customer Support tools into the dynagent usecase pool."""
-    from autobots_devtools_shared_lib.dynagent import register_usecase_tools
+    """Register Customer Support and context tools into the dynagent usecase pool."""
+    from autobots_devtools_shared_lib.dynagent import make_context_tools, register_usecase_tools
 
     register_usecase_tools(
         [
+            *make_context_tools(JarvisContextData, state_cls=JarvisState),
             create_ticket,
             update_ticket,
             search_tickets,

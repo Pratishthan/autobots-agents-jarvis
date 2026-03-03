@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 
 from autobots_agents_jarvis.common.configs.settings import init_app_settings
 from autobots_agents_jarvis.common.models.state import JarvisState
+from autobots_agents_jarvis.common.services.context_setup import init_context_store
 from autobots_agents_jarvis.common.tools.validation_tools import register_validation_tools
 from autobots_agents_jarvis.common.utils.context_utils import init_context_key_resolver
 from autobots_agents_jarvis.common.utils.formatting import format_structured_output
@@ -36,6 +37,10 @@ APP_NAME = "customer_support_chat"
 
 # Register settings so shared-lib (dynagent) uses the same instance.
 init_app_settings()
+
+# Initialise context key resolver and backing store at startup.
+init_context_key_resolver()
+init_context_store(app_name=APP_NAME)
 
 # Registration must precede AgentMeta.instance() (called inside create_base_agent).
 register_validation_tools()  # Register shared validation tools from common/
@@ -96,8 +101,6 @@ async def start():
     """Initialize the chat session with the default customer support coordinator agent."""
     # Create agent instance once and store it in session
     init_tracing()
-    # Resolve context key from user_name so context store lookups use the current user.
-    init_context_key_resolver()
     base_agent = create_base_agent(state_schema=JarvisState)
     cl.user_session.set("base_agent", base_agent)
 
@@ -117,6 +120,21 @@ async def start():
     await cl.Message(
         content="Hello! I'm your Customer Support assistant. How can I help you today?"
     ).send()
+
+    # Seed user_name in context store after welcome message is sent (best-effort; non-fatal).
+    try:
+        from autobots_devtools_shared_lib.common.utils.context_utils import update_context
+
+        update_context(
+            user_id,
+            {
+                "user_name": user_id,
+                "domain_name": APP_NAME,
+                "session_id": cl.context.session.thread_id,
+            },
+        )
+    except Exception:
+        logger.warning("Failed to seed user_name in context store", exc_info=True)
 
 
 @cl.on_message
@@ -142,7 +160,7 @@ async def on_message(message: cl.Message):
 
     input_state: dict[str, Any] = {
         "messages": [{"role": "user", "content": message.content}],
-        "user_id": user_id,
+        "user_name": user_id,
         "app_name": APP_NAME,
         "session_id": cl.context.session.thread_id,
     }

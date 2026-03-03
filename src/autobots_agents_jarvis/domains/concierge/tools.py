@@ -5,6 +5,8 @@ from autobots_devtools_shared_lib.common.observability import get_logger, set_se
 from autobots_devtools_shared_lib.dynagent import Dynagent
 from langchain.tools import ToolRuntime, tool
 
+from autobots_agents_jarvis.common.db.models import JarvisContextData
+from autobots_agents_jarvis.common.models.state import JarvisState
 from autobots_agents_jarvis.common.tools.validation_tools import validate_email
 from autobots_agents_jarvis.domains.concierge.services import get_forecast as weather_get_forecast
 from autobots_agents_jarvis.domains.concierge.services import get_joke, list_categories
@@ -105,12 +107,14 @@ def get_forecast(runtime: ToolRuntime[None, Dynagent], location: str, days: int 
 def register_concierge_tools() -> None:
     """Register all Concierge tools into the dynagent usecase pool.
 
-    Includes joke and weather tools plus shared validation tools (validate_email).
+    Includes joke and weather tools, context tools (get/set/update/clear),
+    and shared validation tools (validate_email).
     """
-    from autobots_devtools_shared_lib.dynagent import register_usecase_tools
+    from autobots_devtools_shared_lib.dynagent import make_context_tools, register_usecase_tools
 
     register_usecase_tools(
         [
+            *make_context_tools(JarvisContextData, state_cls=JarvisState),
             tell_joke,
             get_joke_categories,
             get_weather,

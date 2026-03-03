@@ -6,8 +6,9 @@ from __future__ import annotations
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlmodel import SQLModel
 
-from autobots_agents_jarvis.common.db.models import Base, JarvisContextEntity
+from autobots_agents_jarvis.common.db.models import JarvisContextEntity
 from autobots_agents_jarvis.common.db.repository import JarvisContextRepository
 
 # ---------------------------------------------------------------------------
@@ -19,7 +20,7 @@ from autobots_agents_jarvis.common.db.repository import JarvisContextRepository
 def session_factory():
     """SQLite in-memory engine with all tables created."""
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
-    Base.metadata.create_all(engine)
+    SQLModel.metadata.create_all(engine)
     factory = sessionmaker(bind=engine, expire_on_commit=False)
     yield factory
     engine.dispose()

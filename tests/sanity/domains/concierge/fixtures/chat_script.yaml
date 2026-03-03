@@ -5,7 +5,7 @@ messages:
   - user: "Hello"
     assert_contains: ["Hello! I'm Concierge. How can I help you today?"]
   - user: "set context: user_name: John Doe, repo_name: https://github.com/pralishthan/autobots-agents-jarvis, jira_number: 1234567890"
-    assert_contains: ["set_context_tool"]
+    assert_contains: ["update_context_tool"]
   - user: "What agents are available?"
     assert_contains: ["joke", "weather"]
   - user: "Tell me a joke"
