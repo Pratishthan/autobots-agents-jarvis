@@ -37,8 +37,10 @@ APP_NAME = "concierge_chat"
 # Register Concierge settings so shared-lib (dynagent) uses the same instance.
 init_concierge_settings()
 
-# Initialise write-through context store (Postgres + Redis).
-init_context_store()
+# Initialise context key resolver and backing store at startup.
+# init_context_store() uses InMemoryContextStore when JARVIS_DATABASE_URL is not set.
+init_context_key_resolver()
+init_context_store(app_name=APP_NAME)
 
 # Registration must precede AgentMeta.instance() (called inside create_base_agent).
 register_concierge_tools()
@@ -98,8 +100,6 @@ async def start():
     """Initialize the chat session with the welcome agent."""
     # Create agent instance once and store it in session
     init_tracing()
-    # Resolve context key from user_name so store lookups use the current user.
-    init_context_key_resolver()
     base_agent = create_base_agent(state_schema=JarvisState)
     cl.user_session.set("base_agent", base_agent)
 
@@ -117,6 +117,21 @@ async def start():
     cl.user_session.set("trace_metadata", trace_metadata)
 
     await cl.Message(content="Hello! I'm Concierge. How can I help you today?").send()
+
+    # Seed server-known context fields after welcome message is sent (best-effort; non-fatal).
+    try:
+        from autobots_devtools_shared_lib.common.utils.context_utils import update_context
+
+        update_context(
+            user_id,
+            {
+                "user_name": user_id,
+                "domain_name": APP_NAME,
+                "session_id": cl.context.session.thread_id,
+            },
+        )
+    except Exception:
+        logger.warning("Failed to seed context store", exc_info=True)
 
 
 @cl.on_message

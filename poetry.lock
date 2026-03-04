@@ -357,15 +357,13 @@ files = [
 
 [[package]]
 name = "autobots-devtools-shared-lib"
-version = "0.2.1"
+version = "0.3.1"
 description = "Shared library functions to be used for all autobots projects"
 optional = false
-python-versions = "<4.0.0,>=3.12"
+python-versions = ">=3.12,<4.0.0"
 groups = ["main"]
-files = [
-    {file = "autobots_devtools_shared_lib-0.2.1-py3-none-any.whl", hash = "sha256:6e326accd67fc6b857d24251cc3b4ec324a5661ef69ef087b6016f4ea893c559"},
-    {file = "autobots_devtools_shared_lib-0.2.1.tar.gz", hash = "sha256:0ab452713cd3ce9058e66d718ab988b18c3384d53db671ed947bee6f611039d4"},
-]
+files = []
+develop = true
 
 [package.dependencies]
 chainlit = ">=2.9.6"
@@ -383,6 +381,10 @@ pydantic-settings = ">=2.10.1"
 python-dotenv = ">=1.1.1"
 pyyaml = ">=6.0.3"
 uvicorn = {version = ">=0.32.0", extras = ["standard"]}
+
+[package.source]
+type = "directory"
+url = "../autobots-devtools-shared-lib"
 
 [[package]]
 name = "backoff"
@@ -4997,6 +4999,22 @@ pymysql = ["pymysql"]
 sqlcipher = ["sqlcipher3_binary"]
 
 [[package]]
+name = "sqlmodel"
+version = "0.0.37"
+description = "SQLModel, SQL databases in Python, designed for simplicity, compatibility, and robustness."
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "sqlmodel-0.0.37-py3-none-any.whl", hash = "sha256:2137a4045ef3fd66a917a7717ada959a1ceb3630d95e1f6aaab39dd2c0aef278"},
+    {file = "sqlmodel-0.0.37.tar.gz", hash = "sha256:d2c19327175794faf50b1ee31cc966764f55b1dedefc046450bc5741a3d68352"},
+]
+
+[package.dependencies]
+pydantic = ">=2.11.0"
+SQLAlchemy = ">=2.0.14,<2.1.0"
+
+[[package]]
 name = "sse-starlette"
 version = "3.2.0"
 description = "SSE plugin for Starlette"
@@ -6216,4 +6234,4 @@ dev = ["fakeredis", "playwright", "pre-commit", "pyright", "pytest", "pytest-asy
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0.0"
-content-hash = "e74fb7375033fa8c1f64f7dfe6dc7f3018c2a03158d5c8d676b7d6041a5dbeaa"
+content-hash = "707829d084bb449bf3f5f7dba60579068d258ed2112c40a8df405dac7db91bed"

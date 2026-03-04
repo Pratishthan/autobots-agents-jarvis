@@ -11,23 +11,37 @@ from autobots_devtools_shared_lib.common.services import (
 )
 
 from autobots_agents_jarvis.common.configs.settings import get_app_settings
-from autobots_agents_jarvis.db.engine import init_db_engine
-from autobots_agents_jarvis.db.repository import JarvisContextRepository
+from autobots_agents_jarvis.common.db.engine import init_db_engine
+from autobots_agents_jarvis.common.db.repository import JarvisContextRepository
 
 logger = get_logger(__name__)
 
 
-def init_context_store() -> None:
+def init_context_store(*, app_name: str | None = None) -> None:
     """Initialise and register the write-through CacheBackedContextStore.
 
     Reads JARVIS_DATABASE_URL and REDIS_URL from AppSettings.
-    - JARVIS_DATABASE_URL is required; raises RuntimeError if absent.
+    - JARVIS_DATABASE_URL is optional; logs a warning and sets InMemoryContextStore
+      if absent (suitable for local dev without a DB).
     - REDIS_URL is optional; falls back to InMemoryContextStore for the cache
-      layer (suitable for local development without Redis).
+      layer when absent.
+    - app_name: Domain name for prefix isolation (e.g. 'concierge', 'sales').
+      Defaults to settings.app_name; use '' if not set.
 
-    Call once at server startup, after load_dotenv() / init_concierge_settings() (or other domain init).
+    Safe to call multiple times (idempotent per settings state).
+    Call once at server startup, after load_dotenv() / init_app_settings().
     """
     settings = get_app_settings()
+    prefix_app = app_name if app_name is not None else settings.app_name
+    prefix = f"jarvis-{prefix_app}" if prefix_app else "jarvis"
+
+    if not settings.database_url:
+        logger.warning(
+            "JARVIS_DATABASE_URL not set — context store not initialised; "
+            "using in-memory fallback (data will not persist across restarts)"
+        )
+        set_context_store(InMemoryContextStore())
+        return
 
     session_factory = init_db_engine(settings.database_url)
     repo = JarvisContextRepository(session_factory)
@@ -38,7 +52,10 @@ def init_context_store() -> None:
             _RedisConfig,
         )
 
-        cache = RedisContextStore(_RedisConfig(url=settings.redis_url, prefix="jarvis_ctx"))
+        # Redis prefix for multi-tenant isolation; CacheBackedContextStore applies own prefix to keys.
+        cache: InMemoryContextStore | RedisContextStore = RedisContextStore(
+            _RedisConfig(url=settings.redis_url)
+        )
         logger.info("Context store: CacheBackedContextStore (Postgres + Redis)")
     else:
         cache = InMemoryContextStore()
@@ -46,4 +63,4 @@ def init_context_store() -> None:
             "REDIS_URL not set — using InMemoryContextStore as cache layer (dev mode only)"
         )
 
-    set_context_store(CacheBackedContextStore(db=repo, cache=cache))
+    set_context_store(CacheBackedContextStore(db=repo, cache=cache, prefix=prefix))

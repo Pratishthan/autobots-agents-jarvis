@@ -5,8 +5,9 @@ from __future__ import annotations
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlmodel import SQLModel
 
-from autobots_agents_jarvis.common.db.models import Base
+from autobots_agents_jarvis.common.db.models import JarvisContextEntity  # noqa: F401
 
 _SESSION_FACTORY: sessionmaker[Session] | None = None
 
@@ -31,7 +32,7 @@ def init_db_engine(database_url: str) -> sessionmaker[Session]:
         raise RuntimeError(msg)
 
     engine = create_engine(database_url, pool_pre_ping=True)
-    Base.metadata.create_all(engine)
+    SQLModel.metadata.create_all(engine)
     _SESSION_FACTORY = sessionmaker(bind=engine, expire_on_commit=False)
     return _SESSION_FACTORY
 

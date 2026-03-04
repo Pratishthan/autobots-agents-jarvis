@@ -9,8 +9,9 @@ authors = [
 license = "MIT"
 requires-python = ">=3.12,<4.0.0"
 dependencies = [
-    "autobots-devtools-shared-lib>=0.2.1",
+    "autobots-devtools-shared-lib>=0.3.1",
     "sqlalchemy>=2.0",
+    "sqlmodel>=0.0.21",
     "psycopg2-binary>=2.9",
     "redis>=5.0",
 ]
@@ -35,7 +36,7 @@ packages = [
 
 [tool.poetry.dependencies]
 # Local path dependency (Poetry-specific)
-# autobots-devtools-shared-lib = {path = "../autobots-devtools-shared-lib", develop = true}  # MONOREPO
+autobots-devtools-shared-lib = {path = "../autobots-devtools-shared-lib", develop = true}  # MONOREPO
 
 
 [tool.ruff]

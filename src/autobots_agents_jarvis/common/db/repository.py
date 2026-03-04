@@ -47,8 +47,10 @@ class JarvisContextRepository:
             return {
                 k: v
                 for k, v in {
+                    "domain_name": entity.domain_name,
                     "user_name": entity.user_name,
                     "repo_name": entity.repo_name,
+                    "session_id": entity.session_id,
                     "jira_number": entity.jira_number,
                 }.items()
                 if v is not None
@@ -57,12 +59,15 @@ class JarvisContextRepository:
     def set(self, context_key: str, data: Mapping[str, Any]) -> None:
         """Upsert the context for *context_key*.
 
-        Only the three known fields are persisted; unknown keys are silently
-        ignored. ``user_id`` is accepted as an alias for ``user_name``.
+        Persists domain_name, user_name, repo_name, jira_number, session_id.
+        Unknown keys are silently ignored.
+        ``user_id`` is accepted as an alias for ``user_name``.
         """
+        domain_name = data.get("domain_name")
         user_name = data.get("user_name") or data.get("user_id")
         repo_name = data.get("repo_name")
         jira_number = data.get("jira_number")
+        session_id = data.get("session_id")
         key = self._storage_key(context_key)
         with self._session_factory() as session:
             try:
@@ -70,15 +75,19 @@ class JarvisContextRepository:
                 if entity is None:
                     entity = JarvisContextEntity(
                         context_key=key,
+                        domain_name=domain_name,
                         user_name=user_name,
                         repo_name=repo_name,
                         jira_number=jira_number,
+                        session_id=session_id,
                     )
                     session.add(entity)
                 else:
+                    entity.domain_name = domain_name
                     entity.user_name = user_name
                     entity.repo_name = repo_name
                     entity.jira_number = jira_number
+                    entity.session_id = session_id
                 session.commit()
             except Exception:
                 session.rollback()

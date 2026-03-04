@@ -6,6 +6,8 @@ from autobots_devtools_shared_lib.common.observability import get_logger, set_se
 from autobots_devtools_shared_lib.dynagent import Dynagent
 from langchain.tools import ToolRuntime, tool
 
+from autobots_agents_jarvis.common.db.models import JarvisContextData
+from autobots_agents_jarvis.common.models.state import JarvisState
 from autobots_agents_jarvis.domains.sales.services import check_inventory as service_check_inventory
 from autobots_agents_jarvis.domains.sales.services import get_lead_score as service_get_lead_score
 from autobots_agents_jarvis.domains.sales.services import (
@@ -228,11 +230,12 @@ def check_inventory(runtime: ToolRuntime[None, Dynagent], product_id: str) -> st
 
 
 def register_sales_tools() -> None:
-    """Register all 5 Sales tools into the dynagent usecase pool."""
-    from autobots_devtools_shared_lib.dynagent import register_usecase_tools
+    """Register Sales tools and context tools into the dynagent usecase pool."""
+    from autobots_devtools_shared_lib.dynagent import make_context_tools, register_usecase_tools
 
     register_usecase_tools(
         [
+            *make_context_tools(JarvisContextData, state_cls=JarvisState),
             qualify_lead,
             get_lead_score,
             get_product_catalog,
