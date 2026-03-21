@@ -173,6 +173,7 @@ async def on_message(message: cl.Message):
         on_structured_output=format_structured_output,
         enable_tracing=True,
         trace_metadata=trace_metadata,
+        user_message=message,
     )
     # Re-assert user_name from session so it is not overwritten by tool payloads (e.g. names from messages).
     if session_user_name:

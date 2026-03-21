@@ -13,6 +13,7 @@ agents:
       - "set_context_tool"
       - "update_context_tool"
       - "clear_context_tool"
+      - "move_file_tool"
 
   joke_agent:
     prompt: "01-joke"
