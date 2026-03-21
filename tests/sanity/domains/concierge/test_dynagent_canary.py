@@ -3,6 +3,7 @@
 import os
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.request
 from pathlib import Path
@@ -23,6 +24,7 @@ from tests.conftest import requires_google_api
 pytestmark = [pytest.mark.sanity, requires_google_api]
 
 CHAINLIT_PORT = 12338
+FILE_SERVER_PORT = 19002
 HEADLESS = True
 
 
@@ -30,6 +32,73 @@ HEADLESS = True
 def setup_concierge(concierge_registered):
     """Ensure Concierge tools are registered before each test."""
     pass
+
+
+def _start_file_server(root_dir: str, port: int = FILE_SERVER_PORT) -> subprocess.Popen:
+    """Start the Dynagent file server with FILE_SERVER_ROOT pointing to a temp dir."""
+    env = os.environ.copy()
+    env["FILE_SERVER_ROOT"] = root_dir
+    env["FILE_SERVER_PORT"] = str(port)
+    env["FILE_SERVER_HOST"] = "127.0.0.1"
+    return subprocess.Popen(  # noqa: S603
+        [
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "autobots_devtools_shared_lib.common.servers.fileserver.app:app",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(port),
+        ],
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+
+def _wait_for_file_server(port: int, timeout: float = 15.0) -> bool:
+    """Wait for the file server health endpoint to respond."""
+    url = f"http://127.0.0.1:{port}/health"
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(url, timeout=2) as resp:  # noqa: S310
+                if resp.status == 200:
+                    return True
+        except (OSError, TimeoutError):
+            time.sleep(0.5)
+    return False
+
+
+@pytest.fixture
+def file_server(monkeypatch):
+    """Start a file server backed by a temp directory; yield the root Path."""
+    with tempfile.TemporaryDirectory(prefix="canary_fserver_") as tmpdir:
+        # Point fserver_client_utils at our test server
+        monkeypatch.setenv("FILE_SERVER_HOST", "127.0.0.1")
+        monkeypatch.setenv("FILE_SERVER_PORT", str(FILE_SERVER_PORT))
+        # Also patch the module-level constants so already-imported code picks them up
+        import autobots_devtools_shared_lib.common.utils.fserver_client_utils as futils
+
+        monkeypatch.setattr(futils, "FILE_SERVER_HOST", "127.0.0.1")
+        monkeypatch.setattr(futils, "FILE_SERVER_PORT", str(FILE_SERVER_PORT))
+        monkeypatch.setattr(
+            futils,
+            "FILE_SERVER_BASE_URL",
+            f"http://127.0.0.1:{FILE_SERVER_PORT}",
+        )
+
+        proc = _start_file_server(tmpdir, port=FILE_SERVER_PORT)
+        try:
+            if not _wait_for_file_server(FILE_SERVER_PORT):
+                _out, err = proc.communicate(timeout=2)
+                err_msg = err.decode("utf-8", errors="replace") if err else ""
+                pytest.fail(f"File server did not start in time. Stderr:\n{err_msg[:2000]}")
+            yield Path(tmpdir)
+        finally:
+            proc.terminate()
+            proc.wait(timeout=5)
 
 
 # ---------------------------------------------------------------------------
@@ -82,6 +151,46 @@ def test_batch(concierge_registered):
     assert result.results[0].success
     assert result.results[0].output is not None
     assert len(result.results[0].output) > 0
+
+
+# ---------------------------------------------------------------------------
+# File upload (move_file_tool routing)
+# ---------------------------------------------------------------------------
+
+
+def test_upload_routes_to_move_file(concierge_registered, file_server):
+    """Sanity: welcome_agent routes uploaded-file messages to move_file_tool."""
+    # Seed the source file in the file server root so the move succeeds
+    temp_dir = file_server / "temp"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    source_file = temp_dir / "abc12345_20260101_120000_TEST-1234-Upload.xlsx"
+    source_file.write_bytes(b"fake-xlsx-content")
+
+    upload_message = (
+        "[Uploaded files:\n"
+        "- TEST-1234-Upload.xlsx "
+        "(Path: temp/abc12345_20260101_120000_TEST-1234-Upload.xlsx)]\n"
+        "I uploaded a file."
+    )
+    result = call_invoke_agent_sync(
+        agent_name="welcome_agent",
+        user_message=upload_message,
+        enable_tracing=False,
+    )
+    assert "messages" in result
+    ai_messages = [m for m in result["messages"] if isinstance(m, AIMessage)]
+    assert len(ai_messages) > 0
+    # The agent should attempt to call move_file_tool
+    tool_calls_found = [
+        tc
+        for msg in ai_messages
+        if hasattr(msg, "tool_calls")
+        for tc in (msg.tool_calls or [])
+        if tc.get("name") == "move_file_tool"
+    ]
+    assert len(tool_calls_found) > 0, (
+        "Expected welcome_agent to call move_file_tool for uploaded file message"
+    )
 
 
 # ---------------------------------------------------------------------------

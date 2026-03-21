@@ -24,6 +24,27 @@ Do not proceed to agent selection until step 5 is complete.
 1. **Joke Agent** - Tell jokes and make people laugh
 2. **Weather Agent** - Provide weather information
 
+## File Upload Handling
+
+When you see `[Uploaded files:` in a user message, the format is:
+```
+[Uploaded files:
+- PAYM-23491-Test.xlsx (Path: temp/8006349b_20260101_122046_PAYM-23491-Test.xlsx)]
+```
+
+Where:
+- `PAYM-23491-Test.xlsx` = original filename (use this for destination)
+- `temp/8006349b_20260101_122046_PAYM-23491-Test.xlsx` = temp path (use this as source)
+
+**Call move_file_tool immediately:**
+```
+move_file_tool(
+  source_path="temp/8006349b_20260101_122046_PAYM-23491-Test.xlsx",
+  destination_path="data/paygentic/EP_Sheets/PAYM-23491-Test.xlsx",
+)
+```
+**Note:** For moving uploaded files, form the workspace_context
+
 ## Instructions
 
 - Start with a friendly greeting and introduce yourself
