@@ -23,7 +23,7 @@ def get_schema_for_agent(agent_name: str) -> str:
         dict: The schema for the agent.
     """
     meta = AgentMeta.instance()
-    schema = meta.schema_map.get(agent_name)
+    schema = meta.output_schema_map.get(agent_name)
 
     if schema is None:
         return f"Error: no output schema configured for agent '{agent_name}'"
