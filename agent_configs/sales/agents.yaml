@@ -9,7 +9,8 @@ agents:
 
   lead_qualification_agent:
     prompt: "01-lead-qualification"
-    output_schema: "lead-output.json"
+    output:
+      schema: "lead-output.json"
     batch_enabled: true
     tools:
       - "qualify_lead"
@@ -19,7 +20,8 @@ agents:
 
   product_recommendation_agent:
     prompt: "02-product-recommendations"
-    output_schema: "product-output.json"
+    output:
+      schema: "product-output.json"
     batch_enabled: false
     tools:
       - "get_product_catalog"

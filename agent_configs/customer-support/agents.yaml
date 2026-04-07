@@ -12,7 +12,8 @@ agents:
 
   ticket_agent:
     prompt: "01-ticket-handler"
-    output_schema: "ticket-output.json"
+    output:
+      schema: "ticket-output.json"
     batch_enabled: true
     tools:
       - "create_ticket"
@@ -26,7 +27,8 @@ agents:
 
   knowledge_agent:
     prompt: "02-knowledge-base"
-    output_schema: "knowledge-output.json"
+    output:
+      schema: "knowledge-output.json"
     batch_enabled: false
     tools:
       - "search_knowledge_base"

@@ -16,7 +16,8 @@ agents:
 
   joke_agent:
     prompt: "01-joke"
-    output_schema: "joke-output.json"
+    output:
+      schema: "joke-output.json"
     batch_enabled: true
     tools:
       - "tell_joke"
@@ -27,7 +28,8 @@ agents:
 
   weather_agent:
     prompt: "02-weather"
-    output_schema: "weather-output.json"
+    output:
+      schema: "weather-output.json"
     batch_enabled: false
     tools:
       - "get_weather"
