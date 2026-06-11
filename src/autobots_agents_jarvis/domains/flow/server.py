@@ -83,10 +83,13 @@ async def on_window_message(message: str) -> None:
     try:
         data = json.loads(message) if isinstance(message, str) else message
     except (ValueError, TypeError):
+        logger.debug(f"Dropping malformed window message: {message!r}")
         return
     if isinstance(data, dict) and data.get("kind") == "flow:switch":
-        cl.user_session.set("flow_id", data.get("flowId"))
-        logger.info(f"Active flow set to {data.get('flowId')}")
+        fid = data.get("flowId")
+        if fid:
+            cl.user_session.set("flow_id", fid)
+            logger.info(f"Active flow set to {fid}")
 
 
 @cl.action_callback("jump_to_node")
