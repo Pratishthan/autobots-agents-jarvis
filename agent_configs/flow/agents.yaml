@@ -1,0 +1,12 @@
+# ABOUTME: Flow-assistant agent configuration — single flow-aware Q&A agent.
+
+agents:
+  flow_assistant:
+    prompt: "00-flow-assistant"
+    batch_enabled: false
+    is_default: true
+    tools:
+      - "get_flow"
+      - "list_nodes"
+      - "get_node"
+      - "show_node_references"
