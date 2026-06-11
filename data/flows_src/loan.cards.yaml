@@ -1,0 +1,452 @@
+# Loan Sanction — card content
+# Each key under "cards:" links to a node id in loan.flow.mmd
+# pos: is OPTIONAL. Omit it and the layout engine auto-places the node
+#   from the Mermaid topology. Keep pos: only to pin a node where composition matters.
+
+flow:
+  id: "loan"
+  name: "Loan Sanction"
+  subtitle: "Retail unsecured / secured lending — application to disbursement"
+
+cards:
+  app_received:
+    pos: { col: 0, lane: 0 }
+    owner: "Origination API"
+    team: "Channels"
+    sla: "Instant"
+    desc: "Loan application captured from web, mobile or branch and assigned a unique case ID."
+    inputs:
+      - "Applicant details"
+      - "Loan amount & tenure"
+      - "Product code"
+    outputs:
+      - "Case ID"
+      - "Channel metadata"
+    steps:
+      - "Validate mandatory fields"
+      - "De-dupe against existing cases"
+      - "Generate case ID"
+    links:
+      - label: "Origination API reference"
+        url: "https://docs.lendingco.internal/origination/api"
+      - label: "Channel onboarding runbook"
+        url: "https://wiki.lendingco.internal/channels/runbook"
+
+  doc_upload:
+    pos: { col: 1, lane: 0 }
+    owner: "Applicant"
+    team: "Customer"
+    sla: "Up to 48h"
+    desc: "Applicant uploads identity, address and income proof. Relationship manager assists in branch."
+    inputs:
+      - "ID proof"
+      - "Address proof"
+      - "Bank statements"
+      - "Salary slips"
+    outputs:
+      - "Document set"
+      - "Upload completeness flag"
+    steps:
+      - "Upload required documents"
+      - "RM completeness check"
+      - "Flag missing items back to applicant"
+    documents:
+      - name: "Applicant Document Set"
+        format: "ZIP"
+        status: "Collected"
+        link: "https://vault.lendingco.internal/cases/LN-48213/docs"
+      - name: "KYC Checklist"
+        format: "PDF"
+        status: "Completed"
+        link: "https://vault.lendingco.internal/cases/LN-48213/kyc-checklist"
+    links:
+      - label: "Accepted document types policy"
+        url: "https://wiki.lendingco.internal/kyc/accepted-documents"
+
+  kyc:
+    pos: { col: 2, lane: 0 }
+    subflow: "loan_kyc"
+    owner: "Identity Service"
+    team: "Risk Platform"
+    sla: "< 2 min"
+    desc: "Automated KYC against government registries and sanction/PEP watchlists. Drill in for the full extraction-to-clearance sub-flow."
+    inputs:
+      - "ID proof"
+      - "Applicant PII"
+    outputs:
+      - "KYC status"
+      - "Watchlist hits"
+    steps:
+      - "OCR & extract ID fields"
+      - "Match to government registry"
+      - "Screen sanctions / PEP lists"
+    documents:
+      - name: "KYC Verification Report"
+        format: "PDF"
+        status: "Generated"
+        link: "https://vault.lendingco.internal/cases/LN-48213/kyc-report"
+    links:
+      - label: "KYC & AML policy v4.2"
+        url: "https://wiki.lendingco.internal/policy/kyc-aml"
+      - label: "Sanctions screening SOP"
+        url: "https://wiki.lendingco.internal/risk/sanctions-sop"
+
+  credit_pull:
+    pos: { col: 3, lane: 0 }
+    owner: "Bureau Connector"
+    team: "Risk Platform"
+    sla: "< 30 sec"
+    desc: "Soft pull of credit score and report from connected bureaus."
+    inputs:
+      - "Applicant PAN / SSN"
+      - "Consent token"
+    outputs:
+      - "Credit score"
+      - "Bureau report"
+      - "Existing obligations"
+    steps:
+      - "Submit consent-backed enquiry"
+      - "Aggregate multi-bureau response"
+      - "Compute blended score"
+    documents:
+      - name: "Bureau Credit Report"
+        format: "PDF"
+        status: "Pulled"
+        link: "https://vault.lendingco.internal/cases/LN-48213/bureau-report"
+
+  d_score:
+    pos: { col: 4, lane: 0 }
+    owner: "Decision Engine"
+    team: "Risk Platform"
+    sla: "Instant"
+    desc: "Policy gate on the blended bureau score. Clean files proceed; thin or sub-threshold files route to a human."
+    inputs:
+      - "Credit score"
+      - "Policy ruleset"
+    outputs:
+      - "Routing decision"
+    steps:
+      - "Apply score cut-off"
+      - "Check thin-file / no-hit exceptions"
+      - "Route Pass vs Refer"
+    links:
+      - label: "Credit policy & score cut-offs"
+        url: "https://wiki.lendingco.internal/policy/credit-cutoffs"
+
+  income_verif:
+    pos: { col: 5, lane: -1 }
+    owner: "Verification Analyst"
+    team: "Operations"
+    sla: "1 business day"
+    desc: "Analyst confirms declared income against bank statements and employer records."
+    inputs:
+      - "Bank statements"
+      - "Salary slips"
+      - "Employer details"
+    outputs:
+      - "Verified income"
+      - "Employment status"
+    steps:
+      - "Reconcile salary credits"
+      - "Call / email employer"
+      - "Record verified income figure"
+    documents:
+      - name: "Income Verification Memo"
+        format: "PDF"
+        status: "Signed off"
+        link: "https://vault.lendingco.internal/cases/LN-48213/income-memo"
+
+  manual_review:
+    pos: { col: 5, lane: 1 }
+    owner: "Credit Officer"
+    team: "Credit"
+    sla: "2 business days"
+    desc: "Human assessment of thin-file or borderline applicants who failed the automated gate."
+    inputs:
+      - "Bureau report"
+      - "Document set"
+      - "Score rationale"
+    outputs:
+      - "Override decision"
+      - "Review notes"
+    steps:
+      - "Review bureau & document set"
+      - "Assess compensating factors"
+      - "Approve override or decline"
+    documents:
+      - name: "Credit Review Note"
+        format: "PDF"
+        status: "Authored"
+        link: "https://vault.lendingco.internal/cases/LN-48213/review-note"
+
+  underwriting:
+    pos: { col: 6, lane: 0 }
+    subflow: "loan_underwriting"
+    owner: "Underwriting Engine"
+    team: "Risk Platform"
+    sla: "< 1 min"
+    desc: "Rules + model engine computes eligibility, limit and indicative pricing. Drill in for the underwriting sub-flow."
+    inputs:
+      - "Verified income"
+      - "Credit score"
+      - "Obligations"
+    outputs:
+      - "Eligibility"
+      - "Sanctioned limit"
+      - "Indicative rate"
+    steps:
+      - "Compute FOIR / DTI"
+      - "Run eligibility ruleset"
+      - "Score affordability model"
+    documents:
+      - name: "Underwriting Sheet"
+        format: "PDF"
+        status: "Generated"
+        link: "https://vault.lendingco.internal/cases/LN-48213/underwriting-sheet"
+    links:
+      - label: "Underwriting ruleset & model card"
+        url: "https://wiki.lendingco.internal/risk/underwriting-rules"
+
+  collateral:
+    pos: { col: 7, lane: 0 }
+    owner: "Field Valuer"
+    team: "Operations"
+    sla: "3 business days"
+    desc: "For secured products, an empanelled valuer inspects and values the collateral."
+    inputs:
+      - "Asset details"
+      - "Ownership papers"
+    outputs:
+      - "Valuation report"
+      - "LTV ratio"
+    steps:
+      - "Assign empanelled valuer"
+      - "Physical inspection"
+      - "File valuation & LTV"
+    documents:
+      - name: "Collateral Valuation Report"
+        format: "PDF"
+        status: "Filed"
+        link: "https://vault.lendingco.internal/cases/LN-48213/valuation-report"
+
+  d_risk:
+    pos: { col: 8, lane: 0 }
+    owner: "Decision Engine"
+    team: "Risk Platform"
+    sla: "Instant"
+    desc: "Segments the case into Low / Medium / High to choose the approval track."
+    inputs:
+      - "Eligibility"
+      - "LTV"
+      - "Affordability"
+    outputs:
+      - "Risk tier"
+      - "Approval track"
+    steps:
+      - "Blend risk signals"
+      - "Assign tier"
+      - "Select Low / Medium / High track"
+
+  auto_pricing:
+    pos: { col: 9, lane: -1 }
+    owner: "Pricing Service"
+    team: "Risk Platform"
+    sla: "Instant"
+    desc: "Low-risk cases get straight-through risk-based pricing with no human touch."
+    inputs:
+      - "Risk tier"
+      - "Sanctioned limit"
+    outputs:
+      - "Final rate"
+      - "Fee schedule"
+    steps:
+      - "Map tier to rate card"
+      - "Apply relationship discounts"
+      - "Lock pricing"
+
+  senior_review:
+    pos: { col: 9, lane: 1 }
+    owner: "Senior Underwriter"
+    team: "Credit"
+    sla: "2 business days"
+    desc: "Medium-risk cases are reviewed and signed off by a senior underwriter."
+    inputs:
+      - "Underwriting output"
+      - "Valuation report"
+    outputs:
+      - "Approval decision"
+      - "Sanction conditions"
+    steps:
+      - "Review full credit file"
+      - "Set sanction conditions"
+      - "Approve or decline"
+
+  d_final:
+    pos: { col: 10, lane: 0 }
+    owner: "Approval Authority"
+    team: "Credit"
+    sla: "Instant"
+    desc: "Consolidated approval gate before the offer is generated."
+    inputs:
+      - "Pricing"
+      - "Review sign-off"
+    outputs:
+      - "Approval"
+      - "Sanction terms"
+    steps:
+      - "Confirm authority limits"
+      - "Capture digital sign-off"
+      - "Release to offer"
+
+  offer_gen:
+    pos: { col: 11, lane: 0 }
+    owner: "Offer Service"
+    team: "Lending Core"
+    sla: "< 1 min"
+    desc: "Generates a sanction letter and key-facts statement with final terms."
+    inputs:
+      - "Sanction terms"
+      - "Pricing"
+    outputs:
+      - "Sanction letter"
+      - "Key-facts statement"
+    steps:
+      - "Assemble terms"
+      - "Render sanction letter"
+      - "Publish to customer portal"
+    documents:
+      - name: "Sanction Letter"
+        format: "PDF"
+        status: "Generated"
+        link: "https://vault.lendingco.internal/cases/LN-48213/sanction-letter"
+      - name: "Key-Facts Statement"
+        format: "PDF"
+        status: "Generated"
+        link: "https://vault.lendingco.internal/cases/LN-48213/key-facts"
+
+  offer_accept:
+    pos: { col: 12, lane: 0 }
+    owner: "Applicant"
+    team: "Customer"
+    sla: "Up to 7 days"
+    desc: "Applicant reviews and accepts the sanction terms."
+    inputs:
+      - "Sanction letter"
+      - "Key-facts statement"
+    outputs:
+      - "Acceptance record"
+    steps:
+      - "Review terms"
+      - "Raise queries if any"
+      - "Accept offer"
+
+  esign:
+    pos: { col: 13, lane: 0 }
+    owner: "e-Sign Service"
+    team: "Lending Core"
+    sla: "< 10 min"
+    desc: "Legally binding agreement executed via Aadhaar / OTP e-sign."
+    inputs:
+      - "Accepted terms"
+      - "Customer identity"
+    outputs:
+      - "Executed agreement"
+      - "Audit trail"
+    steps:
+      - "Generate agreement"
+      - "Capture e-sign"
+      - "Store with audit trail"
+    documents:
+      - name: "Executed Loan Agreement"
+        format: "PDF"
+        status: "Signed"
+        link: "https://vault.lendingco.internal/cases/LN-48213/agreement"
+      - name: "e-Sign Audit Trail"
+        format: "JSON"
+        status: "Sealed"
+        link: "https://vault.lendingco.internal/cases/LN-48213/esign-audit"
+
+  compliance:
+    pos: { col: 14, lane: 0 }
+    owner: "Compliance Engine"
+    team: "Compliance"
+    sla: "< 5 min"
+    desc: "Final AML / regulatory screening before funds move."
+    inputs:
+      - "Executed agreement"
+      - "Transaction profile"
+    outputs:
+      - "Clearance"
+      - "Regulatory flags"
+    steps:
+      - "Re-screen AML lists"
+      - "Validate regulatory caps"
+      - "Issue disbursement clearance"
+    documents:
+      - name: "AML Clearance Certificate"
+        format: "PDF"
+        status: "Issued"
+        link: "https://vault.lendingco.internal/cases/LN-48213/aml-clearance"
+    links:
+      - label: "AML regulatory caps reference"
+        url: "https://wiki.lendingco.internal/compliance/aml-caps"
+
+  disbursement:
+    pos: { col: 15, lane: 0 }
+    owner: "Payments Service"
+    team: "Lending Core"
+    sla: "Same day"
+    desc: "Net loan amount credited to the applicant's account."
+    inputs:
+      - "Clearance"
+      - "Account details"
+    outputs:
+      - "Credit transaction"
+      - "Repayment schedule"
+    steps:
+      - "Compute net disbursal"
+      - "Initiate credit"
+      - "Activate repayment schedule"
+    documents:
+      - name: "Disbursement Advice"
+        format: "PDF"
+        status: "Issued"
+        link: "https://vault.lendingco.internal/cases/LN-48213/disbursement-advice"
+      - name: "Repayment Schedule"
+        format: "PDF"
+        status: "Generated"
+        link: "https://vault.lendingco.internal/cases/LN-48213/repayment-schedule"
+
+  loan_active:
+    pos: { col: 16, lane: 0 }
+    owner: "Servicing"
+    team: "Lending Core"
+    sla: "—"
+    desc: "Loan is live and enters the servicing lifecycle."
+    inputs:
+      - "Repayment schedule"
+    outputs:
+      - "Active loan account"
+    steps:
+      - "Notify customer"
+      - "Hand off to servicing"
+
+  declined:
+    pos: { col: 16, lane: 2 }
+    owner: "Notifications"
+    team: "Operations"
+    sla: "Instant"
+    desc: "Application rejected at one of the credit gates. Adverse-action notice issued."
+    inputs:
+      - "Decline reason code"
+    outputs:
+      - "Adverse-action notice"
+    steps:
+      - "Record decline reason"
+      - "Issue notice"
+      - "Close case"
+    documents:
+      - name: "Adverse-Action Notice"
+        format: "PDF"
+        status: "Issued"
+        link: "https://vault.lendingco.internal/cases/LN-48213/adverse-action"

@@ -1,0 +1,30 @@
+%% Sanctions & PEP Screening — sub-flow of Loan Sanction › KYC › Sanctions
+%% Topology only. Card content + grid position live in loan_kyc_sanctions.cards.yaml.
+flowchart LR
+
+  s_start(["Screening Requested"]):::start
+  normalize["Normalize & Transliterate"]:::system
+  list_screen["Global Watchlist Screening"]:::system
+  d_hit{"Potential hit?"}:::decision
+  fuzzy["Fuzzy Match Scoring"]:::system
+  analyst[/"Analyst Adjudication"/]:::manual
+  d_true{"True match?"}:::decision
+  clear_out(["Cleared"]):::end
+  escalate(["Escalated / Blocked"]):::declined
+
+  s_start --> normalize
+  normalize --> list_screen
+  list_screen --> d_hit
+  d_hit -->|No hit| clear_out
+  d_hit -->|Possible| fuzzy
+  fuzzy --> analyst
+  analyst --> d_true
+  d_true -->|False positive| clear_out
+  d_true -- Confirmed --x escalate
+
+  classDef system fill:#151a26,stroke:#34d8f0,stroke-width:1.5px,color:#eef2fb;
+  classDef manual fill:#151a26,stroke:#f5c451,stroke-width:1.5px,color:#eef2fb;
+  classDef decision fill:#151a26,stroke:#c98bff,stroke-width:1.5px,color:#eef2fb;
+  classDef start fill:#0b0e15,stroke:#5fe3a1,stroke-width:1.5px,color:#eef2fb;
+  classDef end fill:#0b0e15,stroke:#5fe3a1,stroke-width:1.5px,color:#eef2fb;
+  classDef declined fill:#0b0e15,stroke:#ff6f6f,stroke-width:1.5px,color:#eef2fb;

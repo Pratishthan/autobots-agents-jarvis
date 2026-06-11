@@ -1,0 +1,36 @@
+%% KYC & Identity Verification — sub-flow of Loan Sanction › KYC
+%% Topology only. Card content + grid position live in loan_kyc.cards.yaml (keyed by node id).
+flowchart LR
+
+  kyc_start(["Document Set Received"]):::start
+  ocr["OCR & Field Extraction"]:::system
+  d_quality{"Image quality OK?"}:::decision
+  manual_key[/"Manual Data Entry"/]:::manual
+  registry_match["Government Registry Match"]:::system
+  d_match{"Identity matched?"}:::decision
+  sanctions["Sanctions & PEP Screening"]:::system
+  d_clear{"Watchlist clear?"}:::decision
+  edd[/"Enhanced Due Diligence"/]:::manual
+  kyc_pass(["KYC Cleared"]):::end
+  kyc_fail(["KYC Rejected"]):::declined
+
+  kyc_start --> ocr
+  ocr --> d_quality
+  d_quality -->|Good| registry_match
+  d_quality -->|Poor| manual_key
+  manual_key --> registry_match
+  registry_match --> d_match
+  d_match -->|Match| sanctions
+  d_match -- No match --x kyc_fail
+  sanctions --> d_clear
+  d_clear -->|Clear| kyc_pass
+  d_clear -->|Hit| edd
+  edd -->|Cleared| kyc_pass
+  edd -- Confirmed --x kyc_fail
+
+  classDef system fill:#151a26,stroke:#34d8f0,stroke-width:1.5px,color:#eef2fb;
+  classDef manual fill:#151a26,stroke:#f5c451,stroke-width:1.5px,color:#eef2fb;
+  classDef decision fill:#151a26,stroke:#c98bff,stroke-width:1.5px,color:#eef2fb;
+  classDef start fill:#0b0e15,stroke:#5fe3a1,stroke-width:1.5px,color:#eef2fb;
+  classDef end fill:#0b0e15,stroke:#5fe3a1,stroke-width:1.5px,color:#eef2fb;
+  classDef declined fill:#0b0e15,stroke:#ff6f6f,stroke-width:1.5px,color:#eef2fb;

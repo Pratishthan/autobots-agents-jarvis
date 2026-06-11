@@ -1,0 +1,55 @@
+%% Loan Sanction — Retail unsecured / secured lending — application to disbursement
+%% Topology only. Card content + grid position live in loan.cards.yaml (keyed by node id).
+flowchart LR
+
+  app_received(["Application Received"]):::start
+  doc_upload[/"Document Upload"/]:::manual
+  kyc["KYC & Identity Verification"]:::system
+  credit_pull["Credit Bureau Pull"]:::system
+  d_score{"Credit score ≥ 680?"}:::decision
+  income_verif[/"Income & Employment Verification"/]:::manual
+  manual_review[/"Manual Credit Review"/]:::manual
+  underwriting["Automated Underwriting Engine"]:::system
+  collateral[/"Collateral Valuation"/]:::manual
+  d_risk{"Risk tier?"}:::decision
+  auto_pricing["Auto Risk-Based Pricing"]:::system
+  senior_review[/"Senior Underwriter Review"/]:::manual
+  d_final{"Final approval?"}:::decision
+  offer_gen["Offer Generation"]:::system
+  offer_accept[/"Offer Acceptance"/]:::manual
+  esign["Loan Agreement e-Sign"]:::system
+  compliance["Compliance & AML Check"]:::system
+  disbursement["Disbursement"]:::system
+  loan_active(["Loan Active"]):::end
+  declined(["Application Declined"]):::declined
+
+  app_received --> doc_upload
+  doc_upload --> kyc
+  kyc --> credit_pull
+  credit_pull --> d_score
+  d_score -->|Pass| income_verif
+  d_score -->|Refer| manual_review
+  income_verif --> underwriting
+  manual_review -->|Override| underwriting
+  manual_review -- Decline --x declined
+  underwriting --> collateral
+  collateral --> d_risk
+  d_risk -->|Low| auto_pricing
+  d_risk -->|Medium| senior_review
+  d_risk -- High --x declined
+  auto_pricing --> d_final
+  senior_review --> d_final
+  d_final -->|Approve| offer_gen
+  d_final -- Decline --x declined
+  offer_gen --> offer_accept
+  offer_accept --> esign
+  esign --> compliance
+  compliance --> disbursement
+  disbursement --> loan_active
+
+  classDef system fill:#151a26,stroke:#34d8f0,stroke-width:1.5px,color:#eef2fb;
+  classDef manual fill:#151a26,stroke:#f5c451,stroke-width:1.5px,color:#eef2fb;
+  classDef decision fill:#151a26,stroke:#c98bff,stroke-width:1.5px,color:#eef2fb;
+  classDef start fill:#0b0e15,stroke:#5fe3a1,stroke-width:1.5px,color:#eef2fb;
+  classDef end fill:#0b0e15,stroke:#5fe3a1,stroke-width:1.5px,color:#eef2fb;
+  classDef declined fill:#0b0e15,stroke:#ff6f6f,stroke-width:1.5px,color:#eef2fb;

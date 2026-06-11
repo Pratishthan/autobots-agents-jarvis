@@ -1,0 +1,128 @@
+# Automated Underwriting Engine — card content (sub-flow of Loan › Underwriting)
+# Keys link to node ids in loan_underwriting.flow.mmd.
+
+flow:
+  id: "loan_underwriting"
+  name: "Automated Underwriting"
+  subtitle: "Loan Sanction › Underwriting — eligibility, affordability & limit"
+
+cards:
+  u_start:
+    owner: "Underwriting Engine"
+    team: "Risk Platform"
+    sla: "Instant"
+    desc: "A verified case with confirmed income enters the underwriting engine from the parent flow."
+    inputs:
+      - "Verified income"
+      - "Credit score"
+      - "Obligations"
+    outputs:
+      - "Underwriting job"
+    steps:
+      - "Load applicant profile"
+      - "Pull policy ruleset"
+
+  foir:
+    owner: "Underwriting Engine"
+    team: "Risk Platform"
+    sla: "Instant"
+    desc: "Computes the fixed-obligation-to-income and debt-to-income ratios that drive eligibility."
+    inputs:
+      - "Verified income"
+      - "Existing obligations"
+    outputs:
+      - "FOIR"
+      - "DTI"
+    steps:
+      - "Sum monthly obligations"
+      - "Add proposed EMI"
+      - "Compute FOIR & DTI"
+
+  elig:
+    owner: "Rules Engine"
+    team: "Risk Platform"
+    sla: "< 30 sec"
+    desc: "Runs the product eligibility ruleset over the applicant and computed ratios."
+    inputs:
+      - "FOIR / DTI"
+      - "Credit score"
+      - "Policy ruleset"
+    outputs:
+      - "Rule results"
+    steps:
+      - "Evaluate age & income rules"
+      - "Evaluate ratio caps"
+      - "Collect pass / fail reasons"
+
+  d_elig:
+    owner: "Decision Engine"
+    team: "Risk Platform"
+    sla: "Instant"
+    desc: "Hard gate — applicants who breach a policy rule are declined before affordability."
+    inputs:
+      - "Rule results"
+    outputs:
+      - "Eligibility decision"
+    steps:
+      - "Check for any hard fail"
+      - "Route Yes vs No"
+
+  afford:
+    owner: "Affordability Model"
+    team: "Risk Platform"
+    sla: "< 30 sec"
+    desc: "A model estimates sustainable EMI from cash-flow patterns, not just declared income."
+    inputs:
+      - "Bank cash flows"
+      - "FOIR / DTI"
+    outputs:
+      - "Affordable EMI"
+      - "Stress headroom"
+    steps:
+      - "Model income stability"
+      - "Stress-test against shocks"
+      - "Output affordable EMI"
+
+  limit:
+    owner: "Pricing Service"
+    team: "Risk Platform"
+    sla: "Instant"
+    desc: "Translates affordability into a sanctioned limit and an indicative risk-based rate."
+    inputs:
+      - "Affordable EMI"
+      - "Credit score"
+    outputs:
+      - "Sanctioned limit"
+      - "Indicative rate"
+    steps:
+      - "Derive limit from EMI"
+      - "Map score to rate card"
+      - "Attach indicative pricing"
+
+  u_done:
+    owner: "Underwriting Engine"
+    team: "Risk Platform"
+    sla: "—"
+    desc: "Eligibility, limit and pricing are ready. Control returns to the parent flow's risk gate."
+    inputs:
+      - "Sanctioned limit"
+      - "Indicative rate"
+    outputs:
+      - "Underwriting decision"
+    steps:
+      - "Package decision"
+      - "Return to parent flow"
+
+  u_fail:
+    pos: { col: 6, lane: 2 }
+    owner: "Notifications"
+    team: "Operations"
+    sla: "Instant"
+    desc: "The applicant breached a hard eligibility rule. The case is declined."
+    inputs:
+      - "Fail reason code"
+    outputs:
+      - "Adverse-action notice"
+    steps:
+      - "Record fail reason"
+      - "Notify parent flow"

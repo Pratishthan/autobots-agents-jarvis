@@ -1,0 +1,136 @@
+# Sanctions & PEP Screening — card content
+# Sub-flow of Loan › KYC › Sanctions (depth 3 — demonstrates arbitrary nesting).
+
+flow:
+  id: "loan_kyc_sanctions"
+  name: "Sanctions & PEP Screening"
+  subtitle: "Loan › KYC › Sanctions — watchlist screening & adjudication"
+
+cards:
+  s_start:
+    owner: "Screening Service"
+    team: "Compliance"
+    sla: "Instant"
+    desc: "A verified identity is handed to the screening engine from the KYC sub-flow."
+    inputs:
+      - "Verified identity"
+    outputs:
+      - "Screening job"
+    steps:
+      - "Accept verified identity"
+      - "Assemble screening payload"
+
+  normalize:
+    owner: "Screening Engine"
+    team: "Compliance"
+    sla: "Instant"
+    desc: "Names are normalized and transliterated so matches survive spelling and script variation."
+    inputs:
+      - "Raw name & aliases"
+    outputs:
+      - "Canonical name forms"
+    steps:
+      - "Strip diacritics & honorifics"
+      - "Transliterate non-Latin scripts"
+      - "Expand known aliases"
+
+  list_screen:
+    owner: "Screening Engine"
+    team: "Compliance"
+    sla: "< 20 sec"
+    desc: "Canonical identity is screened against OFAC, UN, EU, PEP and adverse-media lists."
+    inputs:
+      - "Canonical name forms"
+      - "Date of birth"
+    outputs:
+      - "Raw candidate hits"
+    steps:
+      - "Query sanctions lists"
+      - "Query PEP & adverse media"
+      - "Collect candidate matches"
+
+  d_hit:
+    owner: "Decision Engine"
+    team: "Compliance"
+    sla: "Instant"
+    desc: "Routes clean identities straight through; any candidate match goes to scoring."
+    inputs:
+      - "Raw candidate hits"
+    outputs:
+      - "Routing decision"
+    steps:
+      - "Check candidate count"
+      - "Route No-hit vs Possible"
+
+  fuzzy:
+    owner: "Match Engine"
+    team: "Compliance"
+    sla: "< 15 sec"
+    desc: "Scores each candidate on name, date-of-birth and geography to suppress false positives."
+    inputs:
+      - "Candidate hits"
+      - "Applicant attributes"
+    outputs:
+      - "Scored matches"
+    steps:
+      - "Score name similarity"
+      - "Weight DOB & geography"
+      - "Rank by match confidence"
+
+  analyst:
+    owner: "Sanctions Analyst"
+    team: "Compliance"
+    sla: "4 business hours"
+    desc: "A trained analyst reviews scored candidates and makes the final true/false call."
+    inputs:
+      - "Scored matches"
+      - "Source list records"
+    outputs:
+      - "Adjudication"
+      - "Case notes"
+    steps:
+      - "Compare against source records"
+      - "Request more info if needed"
+      - "Mark true or false match"
+
+  d_true:
+    owner: "Decision Engine"
+    team: "Compliance"
+    sla: "Instant"
+    desc: "False positives clear; a confirmed match blocks the application and escalates."
+    inputs:
+      - "Adjudication"
+    outputs:
+      - "Screening verdict"
+    steps:
+      - "Read analyst verdict"
+      - "Route Cleared vs Confirmed"
+
+  clear_out:
+    owner: "Screening Service"
+    team: "Compliance"
+    sla: "—"
+    desc: "No true match found. The clearance is returned to the parent KYC sub-flow."
+    inputs:
+      - "Screening verdict"
+    outputs:
+      - "Clearance certificate"
+    steps:
+      - "Stamp screening cleared"
+      - "Return to KYC flow"
+
+  escalate:
+    pos: { col: 7, lane: 2 }
+    owner: "Compliance Officer"
+    team: "Compliance"
+    sla: "Immediate"
+    desc: "A confirmed sanctions or PEP match. The case is blocked and escalated for filing."
+    inputs:
+      - "Confirmed match"
+    outputs:
+      - "Block order"
+      - "Regulatory filing"
+    steps:
+      - "Freeze the case"
+      - "File regulatory report"
+      - "Notify parent flow"

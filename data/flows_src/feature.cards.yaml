@@ -1,0 +1,255 @@
+# Feature Generation — card content
+# Each key under "cards:" links to a node id in feature.flow.mmd
+# pos: is OPTIONAL. Omit it and the layout engine auto-places the node
+#   from the Mermaid topology. Keep pos: only to pin a node where composition matters.
+
+flow:
+  id: "feature"
+  name: "Feature Generation"
+  subtitle: "Concept to production — Designer hand-off through Nurture canary"
+
+cards:
+  fr_intake:
+    pos: { col: 0, lane: 0 }
+    owner: "Intake Bot"
+    team: "Platform"
+    sla: "Instant"
+    desc: "Idea captured from a stakeholder, support signal or roadmap item."
+    inputs:
+      - "Problem statement"
+      - "Requestor"
+      - "Target segment"
+    outputs:
+      - "Request ticket"
+    steps:
+      - "Capture request"
+      - "Tag segment & surface"
+      - "Open ticket"
+
+  triage:
+    pos: { col: 1, lane: 0 }
+    owner: "Product Manager"
+    team: "Product"
+    sla: "Weekly"
+    desc: "PM scores impact vs effort and slots the request into a cycle."
+    inputs:
+      - "Request ticket"
+      - "Impact data"
+    outputs:
+      - "Priority"
+      - "Cycle assignment"
+    steps:
+      - "Score impact / effort"
+      - "Check strategic fit"
+      - "Assign to cycle"
+
+  spec:
+    pos: { col: 2, lane: 0 }
+    owner: "Product Manager"
+    team: "Product"
+    sla: "2–3 days"
+    desc: "Detailed spec with success metrics and acceptance criteria."
+    inputs:
+      - "Priority"
+      - "Constraints"
+    outputs:
+      - "Spec doc"
+      - "Success metrics"
+    steps:
+      - "Define scope & metrics"
+      - "List acceptance criteria"
+      - "Review with eng"
+
+  design:
+    pos: { col: 3, lane: 0 }
+    owner: "Product Designer"
+    team: "Design"
+    sla: "3–5 days"
+    desc: "Flows and high-fidelity screens produced in the Designer toolchain."
+    inputs:
+      - "Spec doc"
+      - "Design system"
+    outputs:
+      - "Hi-fi mocks"
+      - "Prototype"
+    steps:
+      - "Draft user flows"
+      - "Build hi-fi screens"
+      - "Assemble clickable prototype"
+
+  d_design:
+    pos: { col: 4, lane: 0 }
+    owner: "Design Lead"
+    team: "Design"
+    sla: "1 day"
+    desc: "Design critique gate. Approved designs proceed; others go back for revision."
+    inputs:
+      - "Hi-fi mocks"
+      - "Prototype"
+    outputs:
+      - "Approval / change list"
+    steps:
+      - "Run design critique"
+      - "Log change requests"
+      - "Approve or request revisions"
+
+  rework:
+    pos: { col: 5, lane: 1 }
+    owner: "Product Designer"
+    team: "Design"
+    sla: "1–2 days"
+    desc: "Designer addresses critique feedback before the build starts."
+    inputs:
+      - "Change list"
+      - "Hi-fi mocks"
+    outputs:
+      - "Revised mocks"
+    steps:
+      - "Address change requests"
+      - "Update prototype"
+      - "Re-submit for sign-off"
+
+  data_ingest:
+    pos: { col: 5, lane: 0 }
+    owner: "Ingestion Pipeline"
+    team: "Data Platform"
+    sla: "Hourly"
+    desc: "Source events and tables are ingested into the feature store staging layer."
+    inputs:
+      - "Source schemas"
+      - "Spec doc"
+    outputs:
+      - "Raw datasets"
+    steps:
+      - "Connect sources"
+      - "Validate schemas"
+      - "Land raw data"
+
+  feature_extract:
+    pos: { col: 6, lane: 0 }
+    owner: "Feature Pipeline"
+    team: "Data Platform"
+    sla: "< 30 min"
+    desc: "Transforms raw data into versioned features in the feature store."
+    inputs:
+      - "Raw datasets"
+      - "Transform configs"
+    outputs:
+      - "Feature vectors"
+    steps:
+      - "Apply transforms"
+      - "Backfill history"
+      - "Register feature versions"
+
+  model_train:
+    pos: { col: 7, lane: 0 }
+    owner: "Training Cluster"
+    team: "ML Platform"
+    sla: "1–4 h"
+    desc: "Trains and evaluates the candidate model on extracted features."
+    inputs:
+      - "Feature vectors"
+      - "Training config"
+    outputs:
+      - "Candidate model"
+      - "Eval metrics"
+    steps:
+      - "Train candidate"
+      - "Evaluate on holdout"
+      - "Log metrics & artifacts"
+
+  d_validation:
+    pos: { col: 8, lane: 0 }
+    owner: "Eval Service"
+    team: "ML Platform"
+    sla: "Instant"
+    desc: "Automated gate on offline metrics vs the agreed threshold."
+    inputs:
+      - "Eval metrics"
+      - "Thresholds"
+    outputs:
+      - "Pass / fail"
+    steps:
+      - "Compare to thresholds"
+      - "Check fairness slices"
+      - "Pass or fail"
+
+  qa_review:
+    pos: { col: 9, lane: 0 }
+    owner: "QA Engineer"
+    team: "Quality"
+    sla: "1 day"
+    desc: "Manual QA across devices and edge cases against acceptance criteria."
+    inputs:
+      - "Candidate build"
+      - "Acceptance criteria"
+    outputs:
+      - "QA sign-off"
+      - "Bug list"
+    steps:
+      - "Run test plan"
+      - "Verify edge cases"
+      - "Sign off or reopen"
+
+  deploy_staging:
+    pos: { col: 10, lane: 0 }
+    owner: "CI/CD"
+    team: "Platform"
+    sla: "< 15 min"
+    desc: "Artifact promoted to the staging environment behind a flag."
+    inputs:
+      - "Candidate build"
+      - "QA sign-off"
+    outputs:
+      - "Staging release"
+    steps:
+      - "Build artifact"
+      - "Deploy behind flag"
+      - "Smoke test"
+
+  nurture:
+    pos: { col: 11, lane: 0 }
+    owner: "Nurture Engine"
+    team: "Growth Platform"
+    sla: "1–7 days"
+    desc: "Progressive rollout to nurture cohorts with guardrail monitoring."
+    inputs:
+      - "Staging release"
+      - "Cohort config"
+    outputs:
+      - "Canary metrics"
+      - "Guardrail status"
+    steps:
+      - "Ramp 1% → 50%"
+      - "Monitor guardrails"
+      - "Hold or promote"
+
+  prod_release:
+    pos: { col: 12, lane: 0 }
+    owner: "Release Manager"
+    team: "Platform"
+    sla: "—"
+    desc: "Feature rolled out to 100% and entered into monitoring."
+    inputs:
+      - "Canary metrics"
+    outputs:
+      - "GA feature"
+    steps:
+      - "Ramp to 100%"
+      - "Announce release"
+      - "Hand off to monitoring"
+
+  failed:
+    pos: { col: 12, lane: 2 }
+    owner: "Eval Service"
+    team: "ML Platform"
+    sla: "Instant"
+    desc: "Candidate failed the metric gate and is sent back to the backlog."
+    inputs:
+      - "Failure reason"
+    outputs:
+      - "Reopened ticket"
+    steps:
+      - "Log failure reason"
+      - "Notify owner"
+      - "Reopen in backlog"

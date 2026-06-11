@@ -1,0 +1,356 @@
+{
+  "id": "feature",
+  "name": "Feature Generation",
+  "nodes": [
+    {
+      "id": "fr_intake",
+      "title": "Feature Request",
+      "type": "terminal",
+      "term": "start",
+      "owner": "Intake Bot",
+      "team": "Platform",
+      "sla": "Instant",
+      "desc": "Idea captured from a stakeholder, support signal or roadmap item.",
+      "inputs": [
+        "Problem statement",
+        "Requestor",
+        "Target segment"
+      ],
+      "outputs": [
+        "Request ticket"
+      ],
+      "steps": [
+        "Capture request",
+        "Tag segment & surface",
+        "Open ticket"
+      ],
+      "documents": []
+    },
+    {
+      "id": "triage",
+      "title": "Triage & Prioritize",
+      "type": "manual",
+      "term": null,
+      "owner": "Product Manager",
+      "team": "Product",
+      "sla": "Weekly",
+      "desc": "PM scores impact vs effort and slots the request into a cycle.",
+      "inputs": [
+        "Request ticket",
+        "Impact data"
+      ],
+      "outputs": [
+        "Priority",
+        "Cycle assignment"
+      ],
+      "steps": [
+        "Score impact / effort",
+        "Check strategic fit",
+        "Assign to cycle"
+      ],
+      "documents": []
+    },
+    {
+      "id": "spec",
+      "title": "Write Spec",
+      "type": "manual",
+      "term": null,
+      "owner": "Product Manager",
+      "team": "Product",
+      "sla": "2\u20133 days",
+      "desc": "Detailed spec with success metrics and acceptance criteria.",
+      "inputs": [
+        "Priority",
+        "Constraints"
+      ],
+      "outputs": [
+        "Spec doc",
+        "Success metrics"
+      ],
+      "steps": [
+        "Define scope & metrics",
+        "List acceptance criteria",
+        "Review with eng"
+      ],
+      "documents": []
+    },
+    {
+      "id": "design",
+      "title": "Design in Designer",
+      "type": "manual",
+      "term": null,
+      "owner": "Product Designer",
+      "team": "Design",
+      "sla": "3\u20135 days",
+      "desc": "Flows and high-fidelity screens produced in the Designer toolchain.",
+      "inputs": [
+        "Spec doc",
+        "Design system"
+      ],
+      "outputs": [
+        "Hi-fi mocks",
+        "Prototype"
+      ],
+      "steps": [
+        "Draft user flows",
+        "Build hi-fi screens",
+        "Assemble clickable prototype"
+      ],
+      "documents": []
+    },
+    {
+      "id": "d_design",
+      "title": "Design approved?",
+      "type": "decision",
+      "term": null,
+      "owner": "Design Lead",
+      "team": "Design",
+      "sla": "1 day",
+      "desc": "Design critique gate. Approved designs proceed; others go back for revision.",
+      "inputs": [
+        "Hi-fi mocks",
+        "Prototype"
+      ],
+      "outputs": [
+        "Approval / change list"
+      ],
+      "steps": [
+        "Run design critique",
+        "Log change requests",
+        "Approve or request revisions"
+      ],
+      "documents": []
+    },
+    {
+      "id": "rework",
+      "title": "Design Revisions",
+      "type": "manual",
+      "term": null,
+      "owner": "Product Designer",
+      "team": "Design",
+      "sla": "1\u20132 days",
+      "desc": "Designer addresses critique feedback before the build starts.",
+      "inputs": [
+        "Change list",
+        "Hi-fi mocks"
+      ],
+      "outputs": [
+        "Revised mocks"
+      ],
+      "steps": [
+        "Address change requests",
+        "Update prototype",
+        "Re-submit for sign-off"
+      ],
+      "documents": []
+    },
+    {
+      "id": "data_ingest",
+      "title": "Data Ingestion",
+      "type": "system",
+      "term": null,
+      "owner": "Ingestion Pipeline",
+      "team": "Data Platform",
+      "sla": "Hourly",
+      "desc": "Source events and tables are ingested into the feature store staging layer.",
+      "inputs": [
+        "Source schemas",
+        "Spec doc"
+      ],
+      "outputs": [
+        "Raw datasets"
+      ],
+      "steps": [
+        "Connect sources",
+        "Validate schemas",
+        "Land raw data"
+      ],
+      "documents": []
+    },
+    {
+      "id": "feature_extract",
+      "title": "Feature Extraction",
+      "type": "system",
+      "term": null,
+      "owner": "Feature Pipeline",
+      "team": "Data Platform",
+      "sla": "< 30 min",
+      "desc": "Transforms raw data into versioned features in the feature store.",
+      "inputs": [
+        "Raw datasets",
+        "Transform configs"
+      ],
+      "outputs": [
+        "Feature vectors"
+      ],
+      "steps": [
+        "Apply transforms",
+        "Backfill history",
+        "Register feature versions"
+      ],
+      "documents": []
+    },
+    {
+      "id": "model_train",
+      "title": "Model Training",
+      "type": "system",
+      "term": null,
+      "owner": "Training Cluster",
+      "team": "ML Platform",
+      "sla": "1\u20134 h",
+      "desc": "Trains and evaluates the candidate model on extracted features.",
+      "inputs": [
+        "Feature vectors",
+        "Training config"
+      ],
+      "outputs": [
+        "Candidate model",
+        "Eval metrics"
+      ],
+      "steps": [
+        "Train candidate",
+        "Evaluate on holdout",
+        "Log metrics & artifacts"
+      ],
+      "documents": []
+    },
+    {
+      "id": "d_validation",
+      "title": "Metrics pass gate?",
+      "type": "decision",
+      "term": null,
+      "owner": "Eval Service",
+      "team": "ML Platform",
+      "sla": "Instant",
+      "desc": "Automated gate on offline metrics vs the agreed threshold.",
+      "inputs": [
+        "Eval metrics",
+        "Thresholds"
+      ],
+      "outputs": [
+        "Pass / fail"
+      ],
+      "steps": [
+        "Compare to thresholds",
+        "Check fairness slices",
+        "Pass or fail"
+      ],
+      "documents": []
+    },
+    {
+      "id": "qa_review",
+      "title": "QA Review",
+      "type": "manual",
+      "term": null,
+      "owner": "QA Engineer",
+      "team": "Quality",
+      "sla": "1 day",
+      "desc": "Manual QA across devices and edge cases against acceptance criteria.",
+      "inputs": [
+        "Candidate build",
+        "Acceptance criteria"
+      ],
+      "outputs": [
+        "QA sign-off",
+        "Bug list"
+      ],
+      "steps": [
+        "Run test plan",
+        "Verify edge cases",
+        "Sign off or reopen"
+      ],
+      "documents": []
+    },
+    {
+      "id": "deploy_staging",
+      "title": "Deploy to Staging",
+      "type": "system",
+      "term": null,
+      "owner": "CI/CD",
+      "team": "Platform",
+      "sla": "< 15 min",
+      "desc": "Artifact promoted to the staging environment behind a flag.",
+      "inputs": [
+        "Candidate build",
+        "QA sign-off"
+      ],
+      "outputs": [
+        "Staging release"
+      ],
+      "steps": [
+        "Build artifact",
+        "Deploy behind flag",
+        "Smoke test"
+      ],
+      "documents": []
+    },
+    {
+      "id": "nurture",
+      "title": "Nurture Canary Rollout",
+      "type": "system",
+      "term": null,
+      "owner": "Nurture Engine",
+      "team": "Growth Platform",
+      "sla": "1\u20137 days",
+      "desc": "Progressive rollout to nurture cohorts with guardrail monitoring.",
+      "inputs": [
+        "Staging release",
+        "Cohort config"
+      ],
+      "outputs": [
+        "Canary metrics",
+        "Guardrail status"
+      ],
+      "steps": [
+        "Ramp 1% \u2192 50%",
+        "Monitor guardrails",
+        "Hold or promote"
+      ],
+      "documents": []
+    },
+    {
+      "id": "prod_release",
+      "title": "Production Release",
+      "type": "terminal",
+      "term": "end",
+      "owner": "Release Manager",
+      "team": "Platform",
+      "sla": "\u2014",
+      "desc": "Feature rolled out to 100% and entered into monitoring.",
+      "inputs": [
+        "Canary metrics"
+      ],
+      "outputs": [
+        "GA feature"
+      ],
+      "steps": [
+        "Ramp to 100%",
+        "Announce release",
+        "Hand off to monitoring"
+      ],
+      "documents": []
+    },
+    {
+      "id": "failed",
+      "title": "Rejected / Reopened",
+      "type": "terminal",
+      "term": "declined",
+      "owner": "Eval Service",
+      "team": "ML Platform",
+      "sla": "Instant",
+      "desc": "Candidate failed the metric gate and is sent back to the backlog.",
+      "inputs": [
+        "Failure reason"
+      ],
+      "outputs": [
+        "Reopened ticket"
+      ],
+      "steps": [
+        "Log failure reason",
+        "Notify owner",
+        "Reopen in backlog"
+      ],
+      "documents": []
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+%% Automated Underwriting Engine — sub-flow of Loan Sanction › Underwriting
+%% Topology only. Card content + grid position live in loan_underwriting.cards.yaml.
+flowchart LR
+
+  u_start(["Underwriting Triggered"]):::start
+  foir["Compute FOIR / DTI"]:::system
+  elig["Eligibility Ruleset"]:::system
+  d_elig{"Eligible?"}:::decision
+  afford["Affordability Model"]:::system
+  limit["Limit & Indicative Pricing"]:::system
+  u_done(["Decision Ready"]):::end
+  u_fail(["Ineligible"]):::declined
+
+  u_start --> foir
+  foir --> elig
+  elig --> d_elig
+  d_elig -->|Yes| afford
+  d_elig -- No --x u_fail
+  afford --> limit
+  limit --> u_done
+
+  classDef system fill:#151a26,stroke:#34d8f0,stroke-width:1.5px,color:#eef2fb;
+  classDef manual fill:#151a26,stroke:#f5c451,stroke-width:1.5px,color:#eef2fb;
+  classDef decision fill:#151a26,stroke:#c98bff,stroke-width:1.5px,color:#eef2fb;
+  classDef start fill:#0b0e15,stroke:#5fe3a1,stroke-width:1.5px,color:#eef2fb;
+  classDef end fill:#0b0e15,stroke:#5fe3a1,stroke-width:1.5px,color:#eef2fb;
+  classDef declined fill:#0b0e15,stroke:#ff6f6f,stroke-width:1.5px,color:#eef2fb;

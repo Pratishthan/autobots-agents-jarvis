@@ -1,0 +1,42 @@
+%% Feature Generation — Concept to production — Designer hand-off through Nurture canary
+%% Topology only. Card content + grid position live in feature.cards.yaml (keyed by node id).
+flowchart LR
+
+  fr_intake(["Feature Request"]):::start
+  triage[/"Triage & Prioritize"/]:::manual
+  spec[/"Write Spec"/]:::manual
+  design[/"Design in Designer"/]:::manual
+  d_design{"Design approved?"}:::decision
+  rework[/"Design Revisions"/]:::manual
+  data_ingest["Data Ingestion"]:::system
+  feature_extract["Feature Extraction"]:::system
+  model_train["Model Training"]:::system
+  d_validation{"Metrics pass gate?"}:::decision
+  qa_review[/"QA Review"/]:::manual
+  deploy_staging["Deploy to Staging"]:::system
+  nurture["Nurture Canary Rollout"]:::system
+  prod_release(["Production Release"]):::end
+  failed(["Rejected / Reopened"]):::declined
+
+  fr_intake --> triage
+  triage --> spec
+  spec --> design
+  design --> d_design
+  d_design -->|Approved| data_ingest
+  d_design -->|Changes| rework
+  rework -->|Revised| data_ingest
+  data_ingest --> feature_extract
+  feature_extract --> model_train
+  model_train --> d_validation
+  d_validation -->|Pass| qa_review
+  d_validation -- Fail --x failed
+  qa_review --> deploy_staging
+  deploy_staging --> nurture
+  nurture --> prod_release
+
+  classDef system fill:#151a26,stroke:#34d8f0,stroke-width:1.5px,color:#eef2fb;
+  classDef manual fill:#151a26,stroke:#f5c451,stroke-width:1.5px,color:#eef2fb;
+  classDef decision fill:#151a26,stroke:#c98bff,stroke-width:1.5px,color:#eef2fb;
+  classDef start fill:#0b0e15,stroke:#5fe3a1,stroke-width:1.5px,color:#eef2fb;
+  classDef end fill:#0b0e15,stroke:#5fe3a1,stroke-width:1.5px,color:#eef2fb;
+  classDef declined fill:#0b0e15,stroke:#ff6f6f,stroke-width:1.5px,color:#eef2fb;

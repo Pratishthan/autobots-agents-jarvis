@@ -1,0 +1,249 @@
+{
+  "id": "loan_kyc",
+  "name": "KYC & Identity Verification",
+  "nodes": [
+    {
+      "id": "kyc_start",
+      "title": "Document Set Received",
+      "type": "terminal",
+      "term": "start",
+      "owner": "Document Service",
+      "team": "Channels",
+      "sla": "Instant",
+      "desc": "Identity, address and income documents arrive from the parent flow's upload step and enter verification.",
+      "inputs": [
+        "Document set",
+        "Case ID"
+      ],
+      "outputs": [
+        "Verification job"
+      ],
+      "steps": [
+        "Receive document bundle",
+        "Queue for extraction"
+      ],
+      "documents": []
+    },
+    {
+      "id": "ocr",
+      "title": "OCR & Field Extraction",
+      "type": "system",
+      "term": null,
+      "owner": "OCR Engine",
+      "team": "Risk Platform",
+      "sla": "< 20 sec",
+      "desc": "Optical character recognition lifts structured fields off each identity document.",
+      "inputs": [
+        "ID images"
+      ],
+      "outputs": [
+        "Extracted fields",
+        "Confidence scores"
+      ],
+      "steps": [
+        "Classify document type",
+        "Extract name, DOB, ID number",
+        "Score field confidence"
+      ],
+      "documents": []
+    },
+    {
+      "id": "d_quality",
+      "title": "Image quality OK?",
+      "type": "decision",
+      "term": null,
+      "owner": "Decision Engine",
+      "team": "Risk Platform",
+      "sla": "Instant",
+      "desc": "Gates on extraction confidence \u2014 clean scans proceed, poor scans route to a human keyer.",
+      "inputs": [
+        "Confidence scores"
+      ],
+      "outputs": [
+        "Routing decision"
+      ],
+      "steps": [
+        "Compare to confidence threshold",
+        "Route Good vs Poor"
+      ],
+      "documents": []
+    },
+    {
+      "id": "manual_key",
+      "title": "Manual Data Entry",
+      "type": "manual",
+      "term": null,
+      "owner": "Data Entry Analyst",
+      "team": "Operations",
+      "sla": "30 min",
+      "desc": "An analyst hand-keys fields the OCR engine could not read with confidence.",
+      "inputs": [
+        "ID images",
+        "Low-confidence fields"
+      ],
+      "outputs": [
+        "Corrected fields"
+      ],
+      "steps": [
+        "Review flagged fields",
+        "Re-key from source image",
+        "Confirm against document"
+      ],
+      "documents": []
+    },
+    {
+      "id": "registry_match",
+      "title": "Government Registry Match",
+      "type": "system",
+      "term": null,
+      "owner": "Identity Service",
+      "team": "Risk Platform",
+      "sla": "< 30 sec",
+      "desc": "Extracted identity is matched against authoritative government registries.",
+      "inputs": [
+        "Extracted fields"
+      ],
+      "outputs": [
+        "Registry record",
+        "Match score"
+      ],
+      "steps": [
+        "Query government registry",
+        "Match name & ID number",
+        "Return verified record"
+      ],
+      "documents": []
+    },
+    {
+      "id": "d_match",
+      "title": "Identity matched?",
+      "type": "decision",
+      "term": null,
+      "owner": "Decision Engine",
+      "team": "Risk Platform",
+      "sla": "Instant",
+      "desc": "Confirms the applicant is a real, registered identity before any risk screening.",
+      "inputs": [
+        "Match score"
+      ],
+      "outputs": [
+        "Match decision"
+      ],
+      "steps": [
+        "Apply match threshold",
+        "Route Match vs No-match"
+      ],
+      "documents": []
+    },
+    {
+      "id": "sanctions",
+      "title": "Sanctions & PEP Screening",
+      "type": "system",
+      "term": null,
+      "owner": "Screening Service",
+      "team": "Compliance",
+      "sla": "< 1 min",
+      "desc": "Screens the verified identity against sanctions, PEP and adverse-media watchlists. Opens its own detailed sub-flow.",
+      "inputs": [
+        "Verified identity"
+      ],
+      "outputs": [
+        "Screening result",
+        "Watchlist hits"
+      ],
+      "steps": [
+        "Normalize & transliterate name",
+        "Screen global watchlists",
+        "Adjudicate potential hits"
+      ],
+      "documents": []
+    },
+    {
+      "id": "d_clear",
+      "title": "Watchlist clear?",
+      "type": "decision",
+      "term": null,
+      "owner": "Decision Engine",
+      "team": "Compliance",
+      "sla": "Instant",
+      "desc": "Clean screens clear immediately; any hit escalates to enhanced due diligence.",
+      "inputs": [
+        "Screening result"
+      ],
+      "outputs": [
+        "Clearance decision"
+      ],
+      "steps": [
+        "Check for unresolved hits",
+        "Route Clear vs Hit"
+      ],
+      "documents": []
+    },
+    {
+      "id": "edd",
+      "title": "Enhanced Due Diligence",
+      "type": "manual",
+      "term": null,
+      "owner": "Compliance Officer",
+      "team": "Compliance",
+      "sla": "2 business days",
+      "desc": "Deeper investigation of flagged applicants \u2014 source-of-funds and relationship review.",
+      "inputs": [
+        "Watchlist hits",
+        "Applicant profile"
+      ],
+      "outputs": [
+        "EDD outcome",
+        "Investigation notes"
+      ],
+      "steps": [
+        "Gather supporting evidence",
+        "Assess source of funds",
+        "Clear or confirm the hit"
+      ],
+      "documents": []
+    },
+    {
+      "id": "kyc_pass",
+      "title": "KYC Cleared",
+      "type": "terminal",
+      "term": "end",
+      "owner": "Identity Service",
+      "team": "Risk Platform",
+      "sla": "\u2014",
+      "desc": "Applicant is verified and screened. Control returns to the parent flow's credit pull.",
+      "inputs": [
+        "Clearance decision"
+      ],
+      "outputs": [
+        "KYC status: cleared"
+      ],
+      "steps": [
+        "Stamp KYC cleared",
+        "Return to parent flow"
+      ],
+      "documents": []
+    },
+    {
+      "id": "kyc_fail",
+      "title": "KYC Rejected",
+      "type": "terminal",
+      "term": "declined",
+      "owner": "Notifications",
+      "team": "Operations",
+      "sla": "Instant",
+      "desc": "Identity could not be verified or a watchlist hit was confirmed. The application is declined.",
+      "inputs": [
+        "Failure reason code"
+      ],
+      "outputs": [
+        "Adverse-action notice"
+      ],
+      "steps": [
+        "Record failure reason",
+        "Notify parent flow"
+      ],
+      "documents": []
+    }
+  ]
+}
