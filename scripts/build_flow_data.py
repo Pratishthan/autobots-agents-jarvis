@@ -50,7 +50,9 @@ def parse_mermaid(src: str) -> list[dict[str, Any]]:
         line = raw.strip()
         if not line or line.startswith("%%") or _SKIP.match(line):
             continue
-        if "-->" in line or "--x" in line:  # edge — topology only, skip
+        if (
+            "-->" in line or "--x" in line
+        ):  # edge line — skip. NOTE: also skips a node whose label literally contains "-->"/"--x" (not present in current data).
             continue
         node = _parse_node(line)
         if node:

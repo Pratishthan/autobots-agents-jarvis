@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from scripts.build_flow_data import build_flow, parse_mermaid
+from scripts.build_flow_data import _norm_docs, build_flow, parse_mermaid
 
 MMD = """flowchart LR
   fr_intake(["Feature Request"]):::start
@@ -29,6 +29,21 @@ CARDS = {
         },
     },
 }
+
+
+def test_norm_docs_dict_form_aliases():
+    # straight-through: name/format/status keys map directly
+    assert _norm_docs([{"name": "Spec", "format": "PDF", "status": "Draft"}]) == [
+        {"name": "Spec", "format": "PDF", "status": "Draft"}
+    ]
+    # alias path: title→name, type→format; status absent → None
+    assert _norm_docs([{"title": "Charter", "type": "DOC"}]) == [
+        {"name": "Charter", "format": "DOC", "status": None}
+    ]
+    # dict with neither name nor title is dropped
+    assert _norm_docs([{"foo": "bar"}]) == []
+    # non-list input is dropped
+    assert _norm_docs(None) == []
 
 
 def test_parse_mermaid_node_types_and_terms():
