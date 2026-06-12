@@ -1,7 +1,6 @@
 # ABOUTME: Flow-assistant Chainlit copilot entry point. Streams a flow-aware Dynagent
 # ABOUTME: agent, tracks the active flow id from the host, and bridges canvas jumps.
 
-import json
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -77,19 +76,22 @@ async def start() -> None:
     cl.user_session.set("trace_metadata", trace_metadata)
 
 
-@cl.on_window_message
-async def on_window_message(message: str) -> None:
-    """Receive `{"kind":"flow:switch","flowId":"…"}` from the host; store the flow id."""
+async def _get_active_flow_id() -> str | None:
+    """Pull the flow currently open on the canvas from the host.
+
+    The copilot host exposes no API to push window messages to the backend
+    (`@cl.on_window_message` is unreachable from the mounted copilot in Chainlit
+    2.9.6), so we pull instead: the host answers `getActiveFlow` over the same
+    `chainlit-call-fn` bridge used for canvas jumps. Returns None when no host
+    responds (e.g. standalone Chainlit) or no flow is open.
+    """
     try:
-        data = json.loads(message) if isinstance(message, str) else message
-    except (ValueError, TypeError):
-        logger.debug(f"Dropping malformed window message: {message!r}")
-        return
-    if isinstance(data, dict) and data.get("kind") == "flow:switch":
-        fid = data.get("flowId")
-        if fid:
-            cl.user_session.set("flow_id", fid)
-            logger.info(f"Active flow set to {fid}")
+        fid = await cl.CopilotFunction(name="getActiveFlow", args={}).acall()
+    except Exception:
+        # no host / disconnected / timeout: treat as no flow open
+        logger.debug("getActiveFlow call failed; treating as no flow open")
+        return None
+    return fid if isinstance(fid, str) and fid else None
 
 
 @cl.action_callback("jump_to_node")
@@ -122,7 +124,7 @@ async def on_message(message: cl.Message) -> None:
         "messages": [{"role": "user", "content": message.content}],
         "app_name": APP_NAME,
         "session_id": cl.context.session.thread_id,
-        "flow_id": cl.user_session.get("flow_id"),
+        "flow_id": await _get_active_flow_id(),
     }
 
     trace_metadata = cl.user_session.get("trace_metadata")
