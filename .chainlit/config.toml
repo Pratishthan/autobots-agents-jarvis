@@ -20,7 +20,11 @@ persist_user_env = false
 mask_user_env = false
 
 # Authorized origins
-allow_origins = ["*"]
+# NOTE: must list specific origins, not ["*"]. Chainlit 2.11 emits a literal
+# `Access-Control-Allow-Origin: *`, which browsers reject alongside
+# `allow-credentials: true` (the copilot sends credentials) -> "Failed to fetch".
+# Reflecting a specific origin makes the credentialed cross-origin request valid.
+allow_origins = ["http://localhost:8200", "http://127.0.0.1:8200"]
 
 [features]
 # Process and display HTML in messages. This can be a security risk (see https://stackoverflow.com/questions/19603097/why-is-it-dangerous-to-render-user-generated-html-or-javascript)
